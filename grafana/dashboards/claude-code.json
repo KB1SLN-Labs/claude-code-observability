@@ -235,7 +235,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (model) (increase(claude_code_cost_usage_USD_total[$__rate_interval]))",
+          "expr": "sum by (model) (increase(claude_code_cost_usage_USD_total[10m]))",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
@@ -302,7 +302,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (type) (increase(claude_code_token_usage_tokens_total[$__rate_interval]))",
+          "expr": "sum by (type) (increase(claude_code_token_usage_tokens_total[10m]))",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
@@ -354,7 +354,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (type) (increase(claude_code_lines_of_code_count_total[$__rate_interval]))",
+          "expr": "sum by (type) (increase(claude_code_lines_of_code_count_total[10m]))",
           "legendFormat": "{{type}}",
           "refId": "A"
         }
