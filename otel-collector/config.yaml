@@ -15,6 +15,10 @@ processors:
     check_interval: 1s
     limit_mib: 256
 
+  # Claude Code emits metrics with delta temporality. Prometheus expects cumulative.
+  deltatocumulative:
+    max_stale: 5m
+
 exporters:
   prometheusremotewrite:
     endpoint: http://prometheus:9090/api/v1/write
@@ -36,7 +40,7 @@ service:
   pipelines:
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
+      processors: [memory_limiter, deltatocumulative, batch]
       exporters: [prometheusremotewrite]
 
     logs:
