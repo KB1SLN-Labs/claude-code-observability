@@ -2,3 +2,4 @@
 docker-compose.override.yml
 otel-collector/config.local.yaml
 .env
+.env.grafana-cloud
