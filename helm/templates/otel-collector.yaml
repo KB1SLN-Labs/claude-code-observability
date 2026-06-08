@@ -88,6 +88,8 @@ spec:
     metadata:
       labels:
         app: {{ .Release.Name }}-otel-collector
+      annotations:
+        checksum/config: {{ toYaml .Values | sha256sum }}
     spec:
       containers:
         - name: otel-collector
