@@ -115,7 +115,8 @@
         "textMode": "auto",
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -145,7 +146,6 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total[24h])))[7d:24h])",
           "legendFormat": "7 Day Avg",
-          "instant": true,
           "refId": "B"
         }
       ]
@@ -164,7 +164,8 @@
         "textMode": "auto",
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -190,7 +191,6 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total{query_source=\"subagent\"}[24h])))[7d:24h])",
           "legendFormat": "7 Day Avg",
-          "instant": true,
           "refId": "B"
         }
       ]
@@ -209,7 +209,8 @@
         "textMode": "auto",
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -239,7 +240,6 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total{query_source=\"main\"}[24h])))[7d:24h])",
           "legendFormat": "7 Day Avg",
-          "instant": true,
           "refId": "B"
         }
       ]
@@ -257,8 +257,9 @@
         "orientation": "horizontal",
         "textMode": "auto",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto"
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -283,14 +284,12 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum(increase(claude_code_code_edit_tool_decision_total{decision=\"accept\"}[24h])) / clamp_min(sum(increase(claude_code_code_edit_tool_decision_total[24h])), 1) * 100",
           "legendFormat": "Accept Rate",
-          "instant": true,
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_code_edit_tool_decision_total{decision=\"accept\"}[24h])) / clamp_min(sum(increase(claude_code_code_edit_tool_decision_total[24h])), 1) * 100)[7d:24h])",
           "legendFormat": "7 Day Avg",
-          "instant": true,
           "refId": "B"
         }
       ]
@@ -353,7 +352,8 @@
         "textMode": "auto",
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -383,7 +383,6 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_session_count_total[24h])), 1))[7d:24h])",
           "legendFormat": "7 Day Average",
-          "instant": true,
           "refId": "B"
         }
       ]
@@ -402,7 +401,8 @@
         "textMode": "auto",
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -428,7 +428,6 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total[24h])), 1) * 1000)[7d:24h])",
           "legendFormat": "7 Day Average",
-          "instant": true,
           "refId": "B"
         }
       ]
@@ -540,7 +539,8 @@
         "textMode": "auto",
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto"
+        "justifyMode": "auto",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
@@ -566,7 +566,6 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "avg_over_time((sum(increase(claude_code_session_count_total[24h])))[7d:24h])",
           "legendFormat": "7 Day Avg",
-          "instant": true,
           "refId": "B"
         }
       ]
