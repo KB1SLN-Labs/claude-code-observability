@@ -108,7 +108,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "rate(claude_code_cost_usage_USD_total[5m]) * 3600",
+          "expr": "sum(rate(claude_code_cost_usage_USD_total[5m])) * 3600",
           "legendFormat": "$/hr",
           "refId": "A"
         }
