@@ -50,10 +50,20 @@
       "id": 1,
       "type": "text",
       "title": "",
-      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 4 },
+      "gridPos": { "x": 0, "y": 0, "w": 20, "h": 4 },
       "options": {
         "mode": "markdown",
-        "content": "`input` — Everything sent to the model this turn (full history + system prompt + your message). Grows every turn as context accumulates. `cacheRead` — Portion served from Anthropic's prompt cache at ≈50% cost. When `cacheRead` dominates, cache hit rate is high and you're spending efficiently. `output` — Visible model response tokens (≈3–4× input rate per token). `cacheCreation` — New cache entries written this turn; small one-time cost to prime future reads.\n\n**Action triggers:** 🔴 Token burn spike → approaching TPM ceiling, start a fresh session · 🟡 `input` > `cacheRead` gap widening → context snowballing, run `/compact` · 🟢 Cache hit ≥80% → spending efficiently · 🔴 Opus cost dominating → check if Sonnet/Haiku could handle the task"
+        "content": "**Token types** — `input`: everything sent to the model per turn (history + system prompt + your message), grows as context accumulates · `cacheRead`: tokens served from Anthropic cache at ≈50% cost, should dominate in a healthy session · `output`: model response tokens · `cacheCreation`: new cache entries written this turn, small one-time cost to prime future reads\n\n**Watch for** — Token burn spike → approaching TPM ceiling, start a fresh session · `input` rising toward `cacheRead` → context snowballing, run `/compact` · Cache hit below 80% → cache not reusing effectively · Opus dominating cost → check if Sonnet or Haiku handles the task"
+      }
+    },
+    {
+      "id": 33,
+      "type": "text",
+      "title": "",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "options": {
+        "mode": "markdown",
+        "content": "### [Claude Code Logs →](/d/claude-code-logs)\n\nLevel filtering · Session drill-down · Error investigation"
       }
     },
     {
@@ -1007,16 +1017,6 @@
           "refId": "A"
         }
       ]
-    },
-    {
-      "id": 32,
-      "type": "text",
-      "title": "",
-      "gridPos": { "x": 0, "y": 49, "w": 24, "h": 2 },
-      "options": {
-        "mode": "markdown",
-        "content": "**Logs** — Raw log stream with level and session filtering: [Claude Code — Logs →](/d/claude-code-logs)"
-      }
     }
   ]
 }
