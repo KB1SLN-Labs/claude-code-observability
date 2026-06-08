@@ -457,21 +457,23 @@
       },
       "fieldConfig": {
         "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
           "custom": { "align": "auto", "displayMode": "auto" }
         },
         "overrides": [
           {
             "matcher": { "id": "byName", "options": "total_tokens" },
             "properties": [
-              { "id": "unit", "value": "short" },
-              { "id": "decimals", "value": 0 },
-              { "id": "custom.width", "value": 110 }
+              { "id": "custom.displayMode", "value": "gradient-gauge" },
+              { "id": "custom.align", "value": "left" }
             ]
           },
           {
             "matcher": { "id": "byName", "options": "type" },
             "properties": [
-              { "id": "custom.width", "value": 100 }
+              { "id": "custom.width", "value": 115 }
             ]
           }
         ]
