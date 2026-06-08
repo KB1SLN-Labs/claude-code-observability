@@ -11,7 +11,7 @@ At the start of every session:
 When saving new memories or updating existing ones during a session:
 - Write to `.claude/memory/` in this project directory
 - Keep `.claude/memory/MEMORY.md` up to date as the index
-- Do NOT duplicate entries to the global memory directory
+- Do NOT write to or sync with the global `~/.claude/projects/` directory — this project is self-contained and other projects have no need for this context
 
 ## Project context
 
