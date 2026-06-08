@@ -22,10 +22,13 @@ A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). Claude
 
 ## Requirements
 
-- Docker and Docker Compose
 - Claude Code with OTEL export configured (see below)
+- **Docker Compose:** Docker and Docker Compose
+- **Kubernetes:** A Kubernetes cluster and `kubectl` (v1.14+, which includes Kustomize)
 
-## Setup
+## Docker Compose
+
+### Setup
 
 **1. Clone the repo:**
 
@@ -90,11 +93,11 @@ Add this to your Claude Code `settings.json` (usually at `~/.claude/settings.jso
 
 Navigate to `http://<stack-host>:3000` (or `http://localhost:3000` if running locally). Dashboards load automatically — no login required.
 
-## Data retention
+### Data retention
 
 Prometheus retains 30 days of metrics by default. Loki retains logs until disk pressure triggers cleanup. Both can be adjusted in `docker-compose.yml`.
 
-## Ports
+### Ports
 
 All ports are configurable via `.env`. These are the defaults:
 
@@ -108,7 +111,7 @@ All ports are configurable via `.env`. These are the defaults:
 
 Only Grafana (for the UI) and the OTLP HTTP port (for Claude Code) need to be reachable from wherever you run Claude. Prometheus and Loki are internal to the stack and their ports only matter if you want to query them directly.
 
-## Stopping
+### Stopping
 
 ```bash
 docker compose down
@@ -118,6 +121,75 @@ To remove all stored data:
 
 ```bash
 docker compose down -v
+```
+
+---
+
+## Kubernetes
+
+Manifests are in the `k8s/` directory and use [Kustomize](https://kustomize.io/), which is built into `kubectl` since v1.14 — no separate install needed.
+
+Grafana and the OTel Collector are exposed via `LoadBalancer` services by default. If your cluster doesn't have a load balancer provisioner (bare metal, local clusters, etc.), change `type: LoadBalancer` to `type: NodePort` in `k8s/otel-collector.yaml` and `k8s/grafana.yaml`. The assigned node ports will be shown by `kubectl get svc -n claude-code-observability`.
+
+### Setup
+
+**1. Clone the repo:**
+
+```bash
+git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
+cd claude-code-observability
+```
+
+**2. Deploy to your cluster:**
+
+```bash
+kubectl apply -k k8s/
+```
+
+This creates the `claude-code-observability` namespace and deploys all four services. PersistentVolumeClaims are created using your cluster's default StorageClass.
+
+**3. Wait for external IPs to be assigned:**
+
+```bash
+kubectl get svc -n claude-code-observability --watch
+```
+
+Wait until both `otel-collector` and `grafana` show an `EXTERNAL-IP` (or a node port if you switched to NodePort).
+
+**4. Configure Claude Code to export telemetry:**
+
+Point Claude Code at the OTel Collector's external IP:
+
+```json
+{
+  "env": {
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<otel-collector-external-ip>:4318",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
+  }
+}
+```
+
+Add this to your Claude Code `settings.json` (usually at `~/.claude/settings.json`) and restart Claude Code.
+
+**5. Open Grafana:**
+
+Navigate to `http://<grafana-external-ip>:3000`. Dashboards load automatically — no login required.
+
+### Data retention
+
+Prometheus and Loki each get a 10Gi PersistentVolumeClaim by default. Prometheus is configured to retain 30 days of metrics. Adjust PVC sizes in `k8s/prometheus.yaml` and `k8s/loki.yaml` before first deploy.
+
+### Tearing down
+
+```bash
+kubectl delete -k k8s/
+```
+
+This removes all workloads and services but leaves the PersistentVolumeClaims intact so data survives accidental teardowns. To remove everything including stored data:
+
+```bash
+kubectl delete -k k8s/
+kubectl delete pvc -n claude-code-observability --all
 ```
 
 ---

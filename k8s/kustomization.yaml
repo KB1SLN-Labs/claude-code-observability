@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: claude-code-observability
+
+resources:
+  - namespace.yaml
+  - otel-collector.yaml
+  - prometheus.yaml
+  - loki.yaml
+  - grafana.yaml
+
+# Builds the grafana-dashboards ConfigMap directly from the dashboard JSON
+# files in grafana/dashboards/. Run `kubectl apply -k k8s/` to apply.
+configMapGenerator:
+  - name: grafana-dashboards
+    files:
+      - ../grafana/dashboards/claude-code.json
+      - ../grafana/dashboards/claude-code-logs.json
+
+generatorOptions:
+  disableNameSuffixHash: true
