@@ -53,7 +53,7 @@
       "gridPos": { "x": 0, "y": 0, "w": 24, "h": 4 },
       "options": {
         "mode": "markdown",
-        "content": "`input` — Everything sent to the model this turn (full history + system prompt + your message). Grows every turn as context accumulates. `cacheRead` — Portion served from Anthropic's prompt cache at ~50% cost. When `cacheRead` dominates, cache hit rate is high and you're spending efficiently. `output` — Visible model response tokens (~3–4× input rate per token). `cacheCreation` — New cache entries written this turn; small one-time cost to prime future reads.\n\n**Action triggers:** 🔴 Token burn spike → approaching TPM ceiling, start a fresh session · 🟡 `input` > `cacheRead` gap widening → context snowballing, run `/compact` · 🟢 Cache hit ≥80% → spending efficiently · 🔴 Opus cost dominating → check if Sonnet/Haiku could handle the task"
+        "content": "`input` — Everything sent to the model this turn (full history + system prompt + your message). Grows every turn as context accumulates. `cacheRead` — Portion served from Anthropic's prompt cache at ≈50% cost. When `cacheRead` dominates, cache hit rate is high and you're spending efficiently. `output` — Visible model response tokens (≈3–4× input rate per token). `cacheCreation` — New cache entries written this turn; small one-time cost to prime future reads.\n\n**Action triggers:** 🔴 Token burn spike → approaching TPM ceiling, start a fresh session · 🟡 `input` > `cacheRead` gap widening → context snowballing, run `/compact` · 🟢 Cache hit ≥80% → spending efficiently · 🔴 Opus cost dominating → check if Sonnet/Haiku could handle the task"
       }
     },
     {
