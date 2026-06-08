@@ -24,6 +24,10 @@ data:
       memory_limiter:
         check_interval: 1s
         limit_mib: 256
+{{- if .Values.dynatrace.enabled }}
+
+      cumulativetodelta:
+{{- end }}
 
     exporters:
       prometheusremotewrite:
@@ -53,7 +57,14 @@ data:
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [prometheusremotewrite{{ if .Values.dynatrace.enabled }}, otlphttp/dynatrace{{ end }}]
+          exporters: [prometheusremotewrite]
+{{- if .Values.dynatrace.enabled }}
+
+        metrics/dynatrace:
+          receivers: [otlp]
+          processors: [memory_limiter, cumulativetodelta, batch]
+          exporters: [otlphttp/dynatrace]
+{{- end }}
 
         logs:
           receivers: [otlp]
