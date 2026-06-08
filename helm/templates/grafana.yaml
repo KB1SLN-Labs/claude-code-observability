@@ -1,0 +1,144 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-provisioning
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        url: http://{{ include "claude-code-observability.prometheusHost" . }}:9090
+        isDefault: true
+        editable: false
+        jsonData:
+          timeInterval: "60s"
+
+      - name: Loki
+        type: loki
+        uid: loki
+        url: http://{{ include "claude-code-observability.lokiHost" . }}:3100
+        isDefault: false
+        editable: false
+
+  dashboards.yaml: |
+    apiVersion: 1
+
+    providers:
+      - name: claude-code
+        type: file
+        disableDeletion: true
+        updateIntervalSeconds: 30
+        options:
+          path: /var/lib/grafana/dashboards
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-grafana-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.grafana.persistence.size }}
+  {{- include "claude-code-observability.storageClassName" .Values.grafana.persistence.storageClass | nindent 2 }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-grafana
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-grafana
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsGroup: 472
+      containers:
+        - name: grafana
+          image: {{ .Values.grafana.image }}
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: Admin
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
+            - name: GF_FEATURE_TOGGLES_ENABLE
+              value: publicDashboards
+          ports:
+            - containerPort: 3000
+          resources:
+            {{- toYaml .Values.grafana.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/grafana
+            - name: provisioning-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: provisioning-dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-grafana-data
+        - name: provisioning-datasources
+          configMap:
+            name: {{ .Release.Name }}-grafana-provisioning
+            items:
+              - key: datasources.yaml
+                path: datasources.yaml
+        - name: provisioning-dashboards
+          configMap:
+            name: {{ .Release.Name }}-grafana-provisioning
+            items:
+              - key: dashboards.yaml
+                path: dashboards.yaml
+        - name: dashboards
+          configMap:
+            name: {{ .Release.Name }}-grafana-dashboards
+
+---
+# Access the Grafana UI here. If your cluster doesn't have a load balancer
+# provisioner, set grafana.service.type to NodePort in values.yaml.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "claude-code-observability.grafanaHost" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+  {{- with .Values.grafana.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.grafana.service.type }}
+  selector:
+    app: {{ .Release.Name }}-grafana
+  ports:
+    - port: 3000
+      targetPort: 3000

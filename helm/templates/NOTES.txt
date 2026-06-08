@@ -1,0 +1,21 @@
+Claude Code Observability has been deployed.
+
+Wait for external IPs to be assigned (LoadBalancer services may take a minute):
+
+  kubectl get svc -n {{ .Release.Namespace }} --watch
+
+Once the Grafana external IP appears, open:
+
+  http://<grafana-external-ip>:3000
+
+To point Claude Code at the OTel Collector, add this to your Claude Code settings.json
+(~/.claude/settings.json) and restart Claude Code:
+
+  {
+    "env": {
+      "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<otel-collector-external-ip>:4318",
+      "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
+    }
+  }
+
+Dashboards load automatically — no login required.

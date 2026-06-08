@@ -1,0 +1,115 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-otel-collector-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+          grpc:
+            endpoint: 0.0.0.0:4317
+
+    processors:
+      batch:
+        timeout: 5s
+        send_batch_size: 1000
+
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 256
+
+    exporters:
+      prometheusremotewrite:
+        endpoint: http://{{ include "claude-code-observability.prometheusHost" . }}:9090/api/v1/write
+        resource_to_telemetry_conversion:
+          enabled: true
+        tls:
+          insecure: true
+
+      loki:
+        endpoint: http://{{ include "claude-code-observability.lokiHost" . }}:3100/loki/api/v1/push
+        default_labels_enabled:
+          exporter: false
+          job: true
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheusremotewrite]
+
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [loki]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-otel-collector
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-otel-collector
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: {{ .Values.otelCollector.image }}
+          args: ["--config=/etc/otel/config.yaml"]
+          ports:
+            - containerPort: 4317
+            - containerPort: 4318
+          resources:
+            {{- toYaml .Values.otelCollector.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Release.Name }}-otel-collector-config
+
+---
+# Claude Code sends telemetry here. If your cluster doesn't have a load
+# balancer provisioner, change service.type to NodePort in values.yaml.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "claude-code-observability.otelCollectorHost" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "claude-code-observability.labels" . | nindent 4 }}
+  {{- with .Values.otelCollector.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.otelCollector.service.type }}
+  selector:
+    app: {{ .Release.Name }}-otel-collector
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318

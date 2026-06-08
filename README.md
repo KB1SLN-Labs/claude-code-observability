@@ -25,6 +25,7 @@ A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). Claude
 - Claude Code with OTEL export configured (see below)
 - **Docker Compose:** Docker and Docker Compose
 - **Kubernetes:** A Kubernetes cluster and `kubectl` (v1.14+, which includes Kustomize)
+- **Helm:** A Kubernetes cluster and [Helm](https://helm.sh/) v3
 
 ## Docker Compose
 
@@ -189,6 +190,100 @@ This removes all workloads and services but leaves the PersistentVolumeClaims in
 
 ```bash
 kubectl delete -k k8s/
+kubectl delete pvc -n claude-code-observability --all
+```
+
+---
+
+## Helm
+
+The Helm chart is in the `helm/` directory. It supports the same four-service stack as the Kubernetes manifests but is easier to customize — all tunables (image versions, service types, PVC sizes, retention, resource limits) are in `values.yaml`.
+
+Grafana and the OTel Collector are exposed via `LoadBalancer` services by default. If your cluster doesn't have a load balancer provisioner, set `otelCollector.service.type` and `grafana.service.type` to `NodePort` in your values override.
+
+### Setup
+
+**1. Clone the repo:**
+
+```bash
+git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
+cd claude-code-observability
+```
+
+**2. Install the chart:**
+
+```bash
+helm install claude-code ./helm --namespace claude-code-observability --create-namespace
+```
+
+To override defaults — for example, to use a specific StorageClass or switch to NodePort:
+
+```bash
+helm install claude-code ./helm \
+  --namespace claude-code-observability \
+  --create-namespace \
+  --set prometheus.persistence.storageClass=standard \
+  --set otelCollector.service.type=NodePort \
+  --set grafana.service.type=NodePort
+```
+
+**3. Wait for external IPs to be assigned:**
+
+```bash
+kubectl get svc -n claude-code-observability --watch
+```
+
+Wait until `claude-code-otel-collector` and `claude-code-grafana` show an `EXTERNAL-IP` (or node port if you switched to NodePort).
+
+**4. Configure Claude Code to export telemetry:**
+
+Point Claude Code at the OTel Collector's external IP:
+
+```json
+{
+  "env": {
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<otel-collector-external-ip>:4318",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
+  }
+}
+```
+
+Add this to your Claude Code `settings.json` (usually at `~/.claude/settings.json`) and restart Claude Code.
+
+**5. Open Grafana:**
+
+Navigate to `http://<grafana-external-ip>:3000`. Dashboards load automatically — no login required.
+
+### Customization
+
+All values are in `helm/values.yaml`. The most commonly changed ones:
+
+| Value | Default | Description |
+|-------|---------|-------------|
+| `prometheus.retention` | `30d` | How long Prometheus keeps metrics |
+| `prometheus.persistence.size` | `10Gi` | Prometheus PVC size |
+| `loki.persistence.size` | `10Gi` | Loki PVC size |
+| `otelCollector.service.type` | `LoadBalancer` | `LoadBalancer` or `NodePort` |
+| `grafana.service.type` | `LoadBalancer` | `LoadBalancer` or `NodePort` |
+| `otelCollector.service.annotations` | `{}` | Cloud load balancer annotations (e.g. AWS NLB) |
+| `grafana.service.annotations` | `{}` | Cloud load balancer annotations |
+
+### Upgrading
+
+```bash
+helm upgrade claude-code ./helm --namespace claude-code-observability
+```
+
+### Tearing down
+
+```bash
+helm uninstall claude-code --namespace claude-code-observability
+```
+
+This removes all workloads and services but leaves the PersistentVolumeClaims intact. To remove everything including stored data:
+
+```bash
+helm uninstall claude-code --namespace claude-code-observability
 kubectl delete pvc -n claude-code-observability --all
 ```
 

@@ -1,0 +1,62 @@
+## OTel Collector
+otelCollector:
+  image: otel/opentelemetry-collector-contrib:0.102.0
+  service:
+    type: LoadBalancer
+    annotations: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+## Prometheus
+prometheus:
+  image: prom/prometheus:v2.52.0
+  retention: 30d
+  persistence:
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+## Loki
+loki:
+  image: grafana/loki:3.0.0
+  persistence:
+    size: 10Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+## Grafana
+grafana:
+  image: grafana/grafana:11.0.0
+  service:
+    type: LoadBalancer
+    annotations: {}
+  persistence:
+    size: 1Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+## Set to false if the namespace already exists or you are managing it externally.
+createNamespace: true

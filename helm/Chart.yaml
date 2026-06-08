@@ -1,0 +1,16 @@
+apiVersion: v2
+name: claude-code-observability
+description: Self-hosted monitoring stack for Claude Code — OTel Collector, Prometheus, Loki, and Grafana.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - claude
+  - observability
+  - opentelemetry
+  - grafana
+home: https://github.com/KB1SLN-Labs/claude-code-observability
+sources:
+  - https://github.com/KB1SLN-Labs/claude-code-observability
+maintainers:
+  - name: KB1SLN-Labs
