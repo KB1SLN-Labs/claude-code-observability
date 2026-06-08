@@ -27,14 +27,7 @@ Three ways to run the stack — pick the one that matches your environment. You 
 | [Kubernetes (Kustomize)](#kubernetes) | A cluster and `kubectl` v1.14+ | Existing cluster without Helm. Raw manifests that are easy to inspect and edit. |
 | [Helm](#helm) | A cluster and Helm v3 | Existing cluster with Helm. Cleanest to customize and upgrade. |
 
-All three options deploy the same four services and the same Grafana dashboards. Clone the repo once before following the setup for your chosen option:
-
-```bash
-git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
-cd claude-code-observability
-```
-
-**All commands in the setup sections below must be run from inside the `claude-code-observability` directory.** If you open a new terminal or log into a different machine to run the deployment steps, `cd` back into the repo first.
+All three options deploy the same four services and the same Grafana dashboards. Each section below includes a clone step — start there regardless of which option you choose.
 
 ---
 
@@ -116,11 +109,16 @@ If panels stay empty after several minutes, see [Troubleshooting](#troubleshooti
 
 ## Docker Compose
 
-> Run all commands from the root of the cloned repo (`claude-code-observability/`).
-
 ### Setup
 
-**1. (Optional) Adjust ports:**
+**1. Clone the repo:**
+
+```bash
+git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
+cd claude-code-observability
+```
+
+**2. (Optional) Adjust ports:**
 
 If any default ports conflict with something already running on your host, copy `.env.example` to `.env` and change the values you need:
 
@@ -142,13 +140,13 @@ LOKI_PORT=3100
 
 Only set the values you're changing. The defaults apply for anything you leave out.
 
-**2. Start the stack:**
+**3. Start the stack:**
 
 ```bash
 docker compose up -d
 ```
 
-**3. Configure Claude Code:**
+**4. Configure Claude Code:**
 
 See [Configuring Claude Code](#configuring-claude-code) for full details. The endpoint depends on where the stack is running.
 
@@ -174,7 +172,7 @@ See [Configuring Claude Code](#configuring-claude-code) for full details. The en
 }
 ```
 
-**4. Open Grafana:**
+**5. Open Grafana:**
 
 Navigate to `http://localhost:3000` (or `http://<stack-host>:3000` if running remotely). Dashboards load automatically — no login required.
 
@@ -202,13 +200,18 @@ docker compose down -v
 
 ## Kubernetes
 
-> Run all commands from the root of the cloned repo (`claude-code-observability/`).
-
 Manifests are in the `k8s/` directory and use [Kustomize](https://kustomize.io/), which is built into `kubectl` since v1.14 — no separate install needed.
 
 ### Setup
 
-**1. Deploy to your cluster:**
+**1. Clone the repo:**
+
+```bash
+git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
+cd claude-code-observability
+```
+
+**2. Deploy to your cluster:**
 
 ```bash
 kubectl apply -k k8s/
@@ -218,7 +221,7 @@ This creates the `claude-code-observability` namespace and deploys all four serv
 
 Grafana and the OTel Collector use `LoadBalancer` services by default. If your cluster doesn't have a load balancer provisioner (bare metal, local clusters, etc.), change `type: LoadBalancer` to `type: NodePort` in `k8s/otel-collector.yaml` and `k8s/grafana.yaml` before running `kubectl apply`.
 
-**2. Wait for external IPs to be assigned:**
+**3. Wait for external IPs to be assigned:**
 
 ```bash
 kubectl get svc -n claude-code-observability --watch
@@ -226,7 +229,7 @@ kubectl get svc -n claude-code-observability --watch
 
 Wait until both `otel-collector` and `grafana` show an `EXTERNAL-IP`. If you switched to NodePort, the assigned ports will appear under `PORT(S)`.
 
-**3. Configure Claude Code:**
+**4. Configure Claude Code:**
 
 See [Configuring Claude Code](#configuring-claude-code) for full details. Point Claude Code at the OTel Collector's external IP:
 
@@ -239,7 +242,7 @@ See [Configuring Claude Code](#configuring-claude-code) for full details. Point 
 }
 ```
 
-**4. Open Grafana:**
+**5. Open Grafana:**
 
 Navigate to `http://<grafana-external-ip>:3000`. Dashboards load automatically — no login required.
 
@@ -264,13 +267,18 @@ kubectl delete pvc -n claude-code-observability --all
 
 ## Helm
 
-> Run all commands from the root of the cloned repo (`claude-code-observability/`).
-
 The Helm chart is in the `helm/` directory. It deploys the same four-service stack as the Kubernetes manifests but all tunables — image versions, service types, PVC sizes, retention, resource limits — are in `values.yaml` rather than requiring direct manifest edits.
 
 ### Setup
 
-**1. Install the chart:**
+**1. Clone the repo:**
+
+```bash
+git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
+cd claude-code-observability
+```
+
+**2. Install the chart:**
 
 ```bash
 helm install claude-code ./helm --namespace claude-code-observability --create-namespace
@@ -287,7 +295,7 @@ helm install claude-code ./helm \
   --set grafana.service.type=NodePort
 ```
 
-**2. Wait for external IPs to be assigned:**
+**3. Wait for external IPs to be assigned:**
 
 ```bash
 kubectl get svc -n claude-code-observability --watch
@@ -295,7 +303,7 @@ kubectl get svc -n claude-code-observability --watch
 
 Wait until `claude-code-otel-collector` and `claude-code-grafana` show an `EXTERNAL-IP`. If you switched to NodePort, the assigned ports will appear under `PORT(S)`.
 
-**3. Configure Claude Code:**
+**4. Configure Claude Code:**
 
 See [Configuring Claude Code](#configuring-claude-code) for full details. Point Claude Code at the OTel Collector's external IP:
 
@@ -308,7 +316,7 @@ See [Configuring Claude Code](#configuring-claude-code) for full details. Point 
 }
 ```
 
-**4. Open Grafana:**
+**5. Open Grafana:**
 
 Navigate to `http://<grafana-external-ip>:3000`. Dashboards load automatically — no login required.
 
