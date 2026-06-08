@@ -20,12 +20,26 @@ A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). Claude
 - Active CLI and user time
 - Raw log stream with level filtering and session drill-down
 
+## Deployment options
+
+Three ways to run the stack — pick the one that matches your environment:
+
+| Option | Best for |
+|--------|----------|
+| [Docker Compose](#docker-compose) | Quickest start. Single machine, local or remote. No cluster needed. |
+| [Kubernetes (Kustomize)](#kubernetes) | Existing cluster, no Helm. Raw manifests, easy to inspect and modify. |
+| [Helm](#helm) | Existing cluster with Helm. Easiest to customize and upgrade. |
+
+All three options deploy the same four services and the same Grafana dashboards.
+
 ## Requirements
 
 - Claude Code with OTEL export configured (see below)
 - **Docker Compose:** Docker and Docker Compose
-- **Kubernetes:** A Kubernetes cluster and `kubectl` (v1.14+, which includes Kustomize)
+- **Kubernetes (Kustomize):** A Kubernetes cluster and `kubectl` (v1.14+, which includes Kustomize)
 - **Helm:** A Kubernetes cluster and [Helm](https://helm.sh/) v3
+
+---
 
 ## Docker Compose
 
