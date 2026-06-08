@@ -500,7 +500,7 @@
       "type": "table",
       "title": "Token Efficiency — Cache Hit % · Input · Cache Read · Output · Cache Creation [OTEL]",
       "description": "All four token type totals side by side. The ratio of cache_read_total to input_total is your effective cache hit rate.",
-      "gridPos": { "x": 4, "y": 19, "w": 10, "h": 8 },
+      "gridPos": { "x": 4, "y": 19, "w": 7, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": { "showHeader": true },
       "fieldConfig": {
@@ -577,7 +577,7 @@
       "type": "table",
       "title": "Total Cost by Session — Top 10 [OTEL]",
       "description": "Most expensive sessions in the selected time range. A single session dominating the list usually means a very long context window or heavy Opus usage.",
-      "gridPos": { "x": 14, "y": 19, "w": 10, "h": 8 },
+      "gridPos": { "x": 11, "y": 19, "w": 9, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "showHeader": true,
@@ -619,6 +619,46 @@
           "expr": "topk(10, sum by (session_id) (claude_code_cost_usage_USD_total))",
           "format": "table",
           "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "type": "timeseries",
+      "title": "Session Count Over Time [OTEL]",
+      "description": "Active sessions per interval. Each line is a distinct session_id. Overlapping lines mean concurrent Claude Code sessions.",
+      "gridPos": { "x": 20, "y": 19, "w": 4, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "spanNulls": false,
+            "showPoints": "auto",
+            "pointSize": 5,
+            "stacking": { "mode": "none", "group": "A" },
+            "axisPlacement": "auto",
+            "scaleDistribution": { "type": "linear" },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (session_id) (increase(claude_code_session_count_total[10m]))",
+          "legendFormat": "{{session_id}}",
           "refId": "A"
         }
       ]
