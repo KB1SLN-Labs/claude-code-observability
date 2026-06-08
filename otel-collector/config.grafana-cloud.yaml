@@ -28,6 +28,8 @@ processors:
 exporters:
   prometheusremotewrite:
     endpoint: "${env:GC_PROMETHEUS_ENDPOINT}"
+    resource_to_telemetry_conversion:
+      enabled: true
     auth:
       authenticator: basicauth/prometheus
     tls:
