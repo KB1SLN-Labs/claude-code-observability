@@ -22,22 +22,17 @@ A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). Claude
 
 ## Deployment options
 
-Three ways to run the stack — pick the one that matches your environment:
+The stack can be deployed three different ways. Pick whichever fits your environment — you only need one.
 
-| Option | Best for |
-|--------|----------|
-| [Docker Compose](#docker-compose) | Quickest start. Single machine, local or remote. No cluster needed. |
-| [Kubernetes (Kustomize)](#kubernetes) | Existing cluster, no Helm. Raw manifests, easy to inspect and modify. |
-| [Helm](#helm) | Existing cluster with Helm. Easiest to customize and upgrade. |
+| Option | What you need | Best for |
+|--------|---------------|----------|
+| [Docker Compose](#docker-compose) | Docker and Docker Compose | Quickest start. Single machine, local or remote. No Kubernetes needed. |
+| [Kubernetes (Kustomize)](#kubernetes) | A cluster and `kubectl` v1.14+ | Existing cluster without Helm. Raw manifests that are easy to inspect and edit. |
+| [Helm](#helm) | A cluster and Helm v3 | Existing cluster with Helm. Cleanest to customize and upgrade. |
 
 All three options deploy the same four services and the same Grafana dashboards.
 
-## Requirements
-
-- Claude Code with OTEL export configured (see below)
-- **Docker Compose:** Docker and Docker Compose
-- **Kubernetes (Kustomize):** A Kubernetes cluster and `kubectl` (v1.14+, which includes Kustomize)
-- **Helm:** A Kubernetes cluster and [Helm](https://helm.sh/) v3
+In all cases you'll also need Claude Code with OTEL export configured — see the setup steps for your chosen option.
 
 ---
 
