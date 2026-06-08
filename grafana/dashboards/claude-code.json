@@ -685,28 +685,29 @@
       "gridPos": { "x": 0, "y": 27, "w": 24, "h": 1 }
     },
     {
-      "id": 18,
-      "type": "stat",
-      "title": "Lines Added",
-      "description": "Total lines of code written by Claude Code across all sessions.",
-      "gridPos": { "x": 0, "y": 28, "w": 6, "h": 4 },
+      "id": 42,
+      "type": "bargauge",
+      "title": "Lines of Code Modified",
+      "description": "Lines added and removed by Claude Code. Today values cover the last 24h; 7 Day Avg is the rolling daily average over the past week.",
+      "gridPos": { "x": 0, "y": 28, "w": 10, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 16
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "decimals": 0,
-          "color": { "mode": "fixed", "fixedColor": "green" },
+          "color": { "mode": "continuous-RdYlGr" },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "green", "value": null }]
+            "steps": [{ "color": "text", "value": null }]
           },
           "mappings": []
         },
@@ -715,35 +716,58 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(claude_code_lines_of_code_count_total{type=\"added\"})",
-          "legendFormat": "Added",
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{type=\"added\"}[24h]))",
+          "instant": true,
+          "legendFormat": "Added Today",
           "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "avg_over_time((sum(increase(claude_code_lines_of_code_count_total{type=\"added\"}[24h])))[7d:24h])",
+          "instant": true,
+          "legendFormat": "Added 7 Day Avg",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{type=\"removed\"}[24h]))",
+          "instant": true,
+          "legendFormat": "Deleted Today",
+          "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "avg_over_time((sum(increase(claude_code_lines_of_code_count_total{type=\"removed\"}[24h])))[7d:24h])",
+          "instant": true,
+          "legendFormat": "Deleted 7 Day Avg",
+          "refId": "D"
         }
       ]
     },
     {
-      "id": 19,
-      "type": "stat",
-      "title": "Lines Removed",
-      "description": "Total lines removed by Claude Code. High removal relative to addition signals active refactoring.",
-      "gridPos": { "x": 6, "y": 28, "w": 6, "h": 4 },
+      "id": 43,
+      "type": "bargauge",
+      "title": "Model Token Efficiency (tokens/$)",
+      "description": "Total tokens per dollar spent, by model. Higher is more efficient. Haiku should vastly outperform Opus here — if it doesn't, check whether model selection is being overridden.",
+      "gridPos": { "x": 10, "y": 28, "w": 10, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto"
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 16
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "decimals": 0,
-          "color": { "mode": "fixed", "fixedColor": "red" },
+          "color": { "mode": "continuous-RdYlGr" },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "color": "red", "value": null }]
+            "steps": [{ "color": "text", "value": null }]
           },
           "mappings": []
         },
@@ -752,18 +776,19 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(claude_code_lines_of_code_count_total{type=\"removed\"})",
-          "legendFormat": "Removed",
+          "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total[$__range])) / clamp_min(sum by (model) (increase(claude_code_cost_usage_USD_total[$__range])), 0.0001)",
+          "instant": true,
+          "legendFormat": "{{model}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 20,
+      "id": 44,
       "type": "stat",
-      "title": "Net Lines",
-      "description": "Net change in codebase size (added minus removed). Positive means the codebase is growing.",
-      "gridPos": { "x": 12, "y": 28, "w": 6, "h": 4 },
+      "title": "Weekly Token Usage",
+      "description": "Total tokens consumed in the last 7 days. Sparkline shows the daily trend — a rising slope means usage is accelerating week over week.",
+      "gridPos": { "x": 20, "y": 28, "w": 4, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -780,10 +805,7 @@
           "color": { "mode": "thresholds" },
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 0 }
-            ]
+            "steps": [{ "color": "text", "value": null }]
           },
           "mappings": []
         },
@@ -792,8 +814,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(claude_code_lines_of_code_count_total{type=\"added\"}) - sum(claude_code_lines_of_code_count_total{type=\"removed\"})",
-          "legendFormat": "Net",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total[7d]))",
+          "legendFormat": "Tokens",
           "refId": "A"
         }
       ]
@@ -803,7 +825,7 @@
       "type": "stat",
       "title": "Total Commits",
       "description": "Commits made during Claude Code sessions in this time range.",
-      "gridPos": { "x": 18, "y": 28, "w": 6, "h": 4 },
+      "gridPos": { "x": 20, "y": 32, "w": 4, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -839,7 +861,7 @@
       "id": 22,
       "type": "timeseries",
       "title": "Lines of Code",
-      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
@@ -887,7 +909,7 @@
       "id": 23,
       "type": "timeseries",
       "title": "Commits over Time",
-      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
@@ -927,14 +949,14 @@
       "type": "row",
       "title": "Rate Limit Proximity & Cache Health",
       "collapsed": false,
-      "gridPos": { "x": 0, "y": 40, "w": 24, "h": 1 }
+      "gridPos": { "x": 0, "y": 44, "w": 24, "h": 1 }
     },
     {
       "id": 26,
       "type": "timeseries",
       "title": "Cache Hit Rate Over Time",
       "description": "Cache hit rate trend over the selected window. Sustained drops below 80% are a signal to restructure long sessions — cache is not being reused effectively. A sudden drop mid-session usually means a large new block of text invalidated the cache.",
-      "gridPos": { "x": 0, "y": 41, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 45, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "tooltip": { "mode": "single", "sort": "none" },
@@ -984,7 +1006,7 @@
       "type": "timeseries",
       "title": "Token Burn Rate — Tokens/min [OTEL]",
       "description": "Tokens consumed per minute across all types. Use this to gauge proximity to your TPM (tokens per minute) rate limit. A sustained high rate approaching your plan's ceiling is the trigger to start a fresh session.",
-      "gridPos": { "x": 12, "y": 41, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 45, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
@@ -1023,14 +1045,14 @@
       "type": "row",
       "title": "Tool & Edit Intelligence",
       "collapsed": false,
-      "gridPos": { "x": 0, "y": 49, "w": 24, "h": 1 }
+      "gridPos": { "x": 0, "y": 53, "w": 24, "h": 1 }
     },
     {
       "id": 35,
       "type": "stat",
       "title": "Edit Acceptance Rate",
       "description": "Percentage of Claude's file edits that were accepted vs. rejected in the selected time range. Below 80% suggests Claude is producing edits that need rework.",
-      "gridPos": { "x": 0, "y": 50, "w": 6, "h": 4 },
+      "gridPos": { "x": 0, "y": 54, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -1072,7 +1094,7 @@
       "type": "stat",
       "title": "Active CLI Time",
       "description": "Total time Claude Code was running and processing in the selected time range.",
-      "gridPos": { "x": 6, "y": 50, "w": 6, "h": 4 },
+      "gridPos": { "x": 6, "y": 54, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -1110,7 +1132,7 @@
       "type": "stat",
       "title": "Active User Time",
       "description": "Total time you spent actively engaged — typing, reviewing — while Claude Code was running.",
-      "gridPos": { "x": 12, "y": 50, "w": 6, "h": 4 },
+      "gridPos": { "x": 12, "y": 54, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -1148,7 +1170,7 @@
       "type": "stat",
       "title": "Total File Edits",
       "description": "Total file edit operations (Edit, Write, NotebookEdit) attempted by Claude in the selected time range.",
-      "gridPos": { "x": 18, "y": 50, "w": 6, "h": 4 },
+      "gridPos": { "x": 18, "y": 54, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -1186,7 +1208,7 @@
       "type": "bargauge",
       "title": "Edit Tool Usage",
       "description": "Count of file edit operations by tool type in the selected time range. Edit modifies existing files; Write creates or overwrites; NotebookEdit targets Jupyter cells.",
-      "gridPos": { "x": 0, "y": 54, "w": 8, "h": 8 },
+      "gridPos": { "x": 0, "y": 58, "w": 8, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -1225,7 +1247,7 @@
       "type": "bargauge",
       "title": "Edit Decisions — Accept vs Reject",
       "description": "How many of Claude's proposed file edits were accepted or rejected. A high reject count points to edit quality or scope issues.",
-      "gridPos": { "x": 8, "y": 54, "w": 8, "h": 8 },
+      "gridPos": { "x": 8, "y": 58, "w": 8, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
@@ -1273,7 +1295,7 @@
       "type": "timeseries",
       "title": "Edit Decisions Over Time",
       "description": "Accept and reject counts per 5-minute window. A rising reject rate mid-session often signals context drift — Claude losing track of the codebase state.",
-      "gridPos": { "x": 16, "y": 54, "w": 8, "h": 8 },
+      "gridPos": { "x": 16, "y": 58, "w": 8, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "tooltip": { "mode": "multi", "sort": "desc" },
