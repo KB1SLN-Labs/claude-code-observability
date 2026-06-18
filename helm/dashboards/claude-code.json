@@ -177,7 +177,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "API-Equivalent Cost Today",
+      "title": "API-Equivalent Cost",
       "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. What the last 24 hours of usage would cost at pay-as-you-go API list prices if you had no subscription. On a Pro/Max/Team plan you pay a flat monthly fee, not this amount. Shown alongside the 7-day rolling daily average to see if today is above or below baseline.",
       "gridPos": {
         "x": 6,
@@ -238,7 +238,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[24h]))",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range]))",
           "legendFormat": "Cost Today",
           "refId": "A"
         },
@@ -256,8 +256,8 @@
     {
       "id": 3,
       "type": "stat",
-      "title": "API-Equivalent Subagent Cost (24h)",
-      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. The pay-as-you-go API list price of subagent tasks — parallel research, code review, and background work — over the last 24 hours. On a subscription plan you are not charged this. High subagent cost relative to main session cost means Claude is spawning many parallel workers.",
+      "title": "API-Equivalent Subagent Cost",
+      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. The pay-as-you-go API list price of subagent tasks — parallel research, code review, and background work — over the selected time range. On a subscription plan you are not charged this. High subagent cost relative to main session cost means Claude is spawning many parallel workers.",
       "gridPos": {
         "x": 12,
         "y": 4,
@@ -309,7 +309,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{query_source=\"subagent\"}[24h]))",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total{query_source=\"subagent\"}[$__range]))",
           "legendFormat": "Subagent Cost",
           "refId": "A"
         },
@@ -327,8 +327,8 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "API-Equivalent Main Session Cost (24h)",
-      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. The pay-as-you-go API list price of main conversation turns (your prompts and Claude's responses, excluding subagent and auxiliary tasks) over the last 24 hours. On a subscription plan you pay a flat fee, not this amount.",
+      "title": "API-Equivalent Main Session Cost",
+      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. The pay-as-you-go API list price of main conversation turns (your prompts and Claude's responses, excluding subagent and auxiliary tasks) over the selected time range. On a subscription plan you pay a flat fee, not this amount.",
       "gridPos": {
         "x": 18,
         "y": 4,
@@ -388,7 +388,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{query_source=\"main\"}[24h]))",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total{query_source=\"main\"}[$__range]))",
           "legendFormat": "Session Cost",
           "refId": "A"
         },
@@ -477,7 +477,7 @@
       "id": 7,
       "type": "stat",
       "title": "API-Equivalent Cost / Session",
-      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Average pay-as-you-go API list price per session over the last 24 hours, vs the 7-day average. On a subscription plan you are not charged per session. A rising number usually means sessions are running longer without being compacted.",
+      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Average pay-as-you-go API list price per session over the selected time range, vs the 7-day average. On a subscription plan you are not charged per session. A rising number usually means sessions are running longer without being compacted.",
       "gridPos": {
         "x": 5,
         "y": 8,
@@ -537,7 +537,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_session_count_total[24h])), 1)",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
           "legendFormat": "Avg Session Cost",
           "refId": "A"
         },
@@ -608,7 +608,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total[24h])), 1) * 1000",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total[$__range])), 1) * 1000",
           "legendFormat": "1K Tokens",
           "refId": "A"
         },
@@ -626,8 +626,8 @@
     {
       "id": 31,
       "type": "bargauge",
-      "title": "API-Equivalent Cost by Effort Level (24h)",
-      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Pay-as-you-go API list price grouped by the effort setting (low / medium / high / max) in the last 24 hours; on a subscription plan you are not charged this. Effort controls thinking-token budget. A large share at high or max effort is worth checking against whether those tasks actually needed deep reasoning.",
+      "title": "API-Equivalent Cost by Effort Level",
+      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Pay-as-you-go API list price grouped by the effort setting (low / medium / high / max) over the selected time range; on a subscription plan you are not charged this. Effort controls thinking-token budget. A large share at high or max effort is worth checking against whether those tasks actually needed deep reasoning.",
       "gridPos": {
         "x": 15,
         "y": 8,
@@ -680,7 +680,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sort_desc(sum by(effort)(increase(claude_code_cost_usage_USD_total{effort!=\"\"}[24h])))",
+          "expr": "sort_desc(sum by(effort)(increase(claude_code_cost_usage_USD_total{effort!=\"\"}[$__range])))",
           "legendFormat": "{{effort}}",
           "instant": true,
           "refId": "A"
@@ -690,8 +690,8 @@
     {
       "id": 35,
       "type": "stat",
-      "title": "API-Equivalent Cache Savings (24h)",
-      "description": "API-EQUIVALENT FIGURE, NOT YOUR ACTUAL BILL. Approximate dollars prompt caching would save at pay-as-you-go API list prices over the last 24 hours, vs the 7-day average. On a subscription plan this is value/efficiency, not cash back. Computed as cacheRead tokens × (input price − cache read price): Sonnet $2.70/1M, Haiku $0.72/1M. Sonnet dominates usage here.",
+      "title": "API-Equivalent Cache Savings",
+      "description": "API-EQUIVALENT FIGURE, NOT YOUR ACTUAL BILL. Approximate dollars prompt caching would save at pay-as-you-go API list prices over the selected time range, vs the 7-day average. On a subscription plan this is value/efficiency, not cash back. Computed as cacheRead tokens × (input price − cache read price): Sonnet $2.70/1M, Haiku $0.72/1M. Sonnet dominates usage here.",
       "gridPos": {
         "x": 20,
         "y": 8,
@@ -743,7 +743,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*sonnet.*\"}[24h])) * 0.0000027 + sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*haiku.*\"}[24h])) * 0.00000072",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*sonnet.*\"}[$__range])) * 0.0000027 + sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*haiku.*\"}[$__range])) * 0.00000072",
           "legendFormat": "Savings Today",
           "refId": "A"
         },
@@ -975,8 +975,8 @@
     {
       "id": 26,
       "type": "stat",
-      "title": "Effective Tokens — All Models (24h)",
-      "description": "Actual effective (non-cacheRead) tokens consumed across all models in the last 24 hours, with a 7-day sparkline showing the daily trend. These are the tokens that count toward Anthropic's usage limits (cacheRead is excluded). This is a real measured volume, not a percentage of limit — OTel telemetry cannot reconstruct Anthropic's quota gauge because the weekly reset boundary is not exported. For your true remaining quota, run /usage in the Claude Code CLI.",
+      "title": "Effective Tokens — All Models",
+      "description": "Actual effective (non-cacheRead) tokens consumed across all models over the selected time range, with a 7-day sparkline showing the daily trend. These are the tokens that count toward Anthropic's usage limits (cacheRead is excluded). This is a real measured volume, not a percentage of limit — OTel telemetry cannot reconstruct Anthropic's quota gauge because the weekly reset boundary is not exported. For your true remaining quota, run /usage in the Claude Code CLI.",
       "gridPos": {
         "x": 0,
         "y": 19,
@@ -1029,7 +1029,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\"}[24h]))",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\"}[$__range]))",
           "legendFormat": "Effective Tokens (24h)",
           "refId": "A"
         }
@@ -1038,8 +1038,8 @@
     {
       "id": 27,
       "type": "stat",
-      "title": "Effective Tokens — Sonnet Only (24h)",
-      "description": "Actual effective (non-cacheRead) Sonnet tokens consumed in the last 24 hours, with a 7-day sparkline trend. Sonnet has its own separate usage cap at Anthropic, which is why it's broken out here. This is a real measured volume, not a percentage of limit — the weekly reset boundary needed to compute a true percentage is not exported in OTel telemetry. Run /usage in the Claude Code CLI for your actual remaining quota.",
+      "title": "Effective Tokens — Sonnet Only",
+      "description": "Actual effective (non-cacheRead) Sonnet tokens consumed over the selected time range, with a 7-day sparkline trend. Sonnet has its own separate usage cap at Anthropic, which is why it's broken out here. This is a real measured volume, not a percentage of limit — the weekly reset boundary needed to compute a true percentage is not exported in OTel telemetry. Run /usage in the Claude Code CLI for your actual remaining quota.",
       "gridPos": {
         "x": 12,
         "y": 19,
@@ -1092,7 +1092,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\",model=~\".*sonnet.*\"}[24h]))",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\",model=~\".*sonnet.*\"}[$__range]))",
           "legendFormat": "Sonnet Effective Tokens (24h)",
           "refId": "A"
         }
@@ -1101,8 +1101,8 @@
     {
       "id": 15,
       "type": "stat",
-      "title": "Total Tokens Today",
-      "description": "All tokens consumed in the last 24 hours across all types, alongside the 7-day daily average.",
+      "title": "Total Tokens",
+      "description": "All tokens consumed over the selected time range across all types, alongside the 7-day daily average.",
       "gridPos": {
         "x": 0,
         "y": 24,
@@ -1153,7 +1153,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total[24h]))",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total[$__range]))",
           "legendFormat": "Total Tokens Today",
           "refId": "A"
         },
@@ -1392,8 +1392,8 @@
     {
       "id": 10,
       "type": "piechart",
-      "title": "Token Distribution by Model (24h)",
-      "description": "Share of total tokens consumed by each model in the last 24 hours. Sonnet dominating is expected for most workloads. A large Opus slice warrants a check on whether those tasks needed Opus-level reasoning.",
+      "title": "Token Distribution by Model",
+      "description": "Share of total tokens consumed by each model over the selected time range. Sonnet dominating is expected for most workloads. A large Opus slice warrants a check on whether those tasks needed Opus-level reasoning.",
       "gridPos": {
         "x": 0,
         "y": 37,
@@ -1441,7 +1441,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total[24h]))",
+          "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total[$__range]))",
           "legendFormat": "{{model}}",
           "instant": true,
           "refId": "A"
@@ -1512,7 +1512,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\"}[24h])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total{type=~\"input|cacheRead|cacheCreation\"}[24h])), 1) * 100",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\"}[$__range])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total{type=~\"input|cacheRead|cacheCreation\"}[$__range])), 1) * 100",
           "legendFormat": "Cache Hit %",
           "refId": "A"
         }
@@ -1535,7 +1535,7 @@
       "id": 5,
       "type": "stat",
       "title": "Code Edit Acceptance Rate %",
-      "description": "Percentage of Claude's proposed file edits that were accepted in the last 24 hours, plus the 7-day average. Below 80% suggests edits are frequently being rejected or need rework.",
+      "description": "Percentage of Claude's proposed file edits that were accepted over the selected time range, plus the 7-day average. Below 80% suggests edits are frequently being rejected or need rework.",
       "gridPos": {
         "x": 0,
         "y": 46,
@@ -1596,7 +1596,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_code_edit_tool_decision_total{decision=\"accept\"}[24h])) / clamp_min(sum(increase(claude_code_code_edit_tool_decision_total[24h])), 1) * 100",
+          "expr": "sum(increase(claude_code_code_edit_tool_decision_total{decision=\"accept\"}[$__range])) / clamp_min(sum(increase(claude_code_code_edit_tool_decision_total[$__range])), 1) * 100",
           "legendFormat": "Accept Rate",
           "refId": "A"
         },
@@ -1614,7 +1614,7 @@
     {
       "id": 9,
       "type": "stat",
-      "title": "Active Time (24h)",
+      "title": "Active Time",
       "description": "CLI time is how long Claude Code was running and processing. User time is how long you were actively engaged. A high CLI-to-user ratio means Claude is doing a lot of autonomous work.",
       "gridPos": {
         "x": 6,
@@ -1698,7 +1698,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_active_time_seconds_total{type=\"cli\"}[24h])) / 60",
+          "expr": "sum(increase(claude_code_active_time_seconds_total{type=\"cli\"}[$__range])) / 60",
           "legendFormat": "CLI Time (min)",
           "instant": true,
           "refId": "A"
@@ -1708,7 +1708,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_active_time_seconds_total{type=\"user\"}[24h])) / 60",
+          "expr": "sum(increase(claude_code_active_time_seconds_total{type=\"user\"}[$__range])) / 60",
           "legendFormat": "User Time (min)",
           "instant": true,
           "refId": "B"
@@ -1718,8 +1718,8 @@
     {
       "id": 11,
       "type": "stat",
-      "title": "Active Sessions (24h)",
-      "description": "Number of Claude Code sessions in the last 24 hours compared to the 7-day daily average.",
+      "title": "Active Sessions",
+      "description": "Number of Claude Code sessions over the selected time range compared to the 7-day daily average.",
       "gridPos": {
         "x": 12,
         "y": 46,
@@ -1771,7 +1771,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_session_count_total[24h]))",
+          "expr": "sum(increase(claude_code_session_count_total[$__range]))",
           "legendFormat": "Active Sessions",
           "refId": "A"
         },
@@ -1790,7 +1790,7 @@
       "id": 13,
       "type": "bargauge",
       "title": "Lines of Code Modified",
-      "description": "Lines added and removed in the last 24 hours alongside rolling 7-day daily averages. A large gap between Today and 7 Day Avg indicates an unusually active or quiet day.",
+      "description": "Lines added and removed over the selected time range alongside rolling 7-day daily averages. A large gap between Today and 7 Day Avg indicates an unusually active or quiet day.",
       "gridPos": {
         "x": 18,
         "y": 46,
@@ -1842,7 +1842,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_lines_of_code_count_total{type=\"added\"}[24h]))",
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{type=\"added\"}[$__range]))",
           "legendFormat": "Added Today",
           "instant": true,
           "refId": "A"
@@ -1862,7 +1862,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_lines_of_code_count_total{type=\"removed\"}[24h]))",
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{type=\"removed\"}[$__range]))",
           "legendFormat": "Deleted Today",
           "instant": true,
           "refId": "C"
@@ -1883,7 +1883,7 @@
       "id": 12,
       "type": "bargauge",
       "title": "Average Session Metrics",
-      "description": "Per-session averages over the last 24 hours: cost in dollars, total tokens, and active CLI time. Rising cost or token averages over days indicate sessions are running longer without being compacted.",
+      "description": "Per-session averages over the selected time range: cost in dollars, total tokens, and active CLI time. Rising cost or token averages over days indicate sessions are running longer without being compacted.",
       "gridPos": {
         "x": 0,
         "y": 50,
@@ -2015,7 +2015,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_session_count_total[24h])), 1)",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
           "legendFormat": "Avg Cost",
           "instant": true,
           "refId": "A"
@@ -2025,7 +2025,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total[24h])) / clamp_min(sum(increase(claude_code_session_count_total[24h])), 1)",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
           "legendFormat": "Avg Tokens",
           "instant": true,
           "refId": "B"
@@ -2035,7 +2035,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_active_time_seconds_total{type=\"cli\"}[24h])) / clamp_min(sum(increase(claude_code_session_count_total[24h])), 1)",
+          "expr": "sum(increase(claude_code_active_time_seconds_total{type=\"cli\"}[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
           "legendFormat": "Avg Duration",
           "instant": true,
           "refId": "C"
@@ -2153,8 +2153,8 @@
     {
       "id": 32,
       "type": "stat",
-      "title": "Commits (24h)",
-      "description": "Git commits made via Claude Code in the last 24 hours versus the 7-day daily average. Pairs with the lines-of-code panels to show shipped output, not just edit volume.",
+      "title": "Commits",
+      "description": "Git commits made via Claude Code over the selected time range versus the 7-day daily average. Pairs with the lines-of-code panels to show shipped output, not just edit volume.",
       "gridPos": {
         "x": 0,
         "y": 55,
@@ -2207,7 +2207,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(claude_code_commit_count_total[24h]))",
+          "expr": "sum(increase(claude_code_commit_count_total[$__range]))",
           "legendFormat": "Commits Today",
           "refId": "A"
         },
@@ -2359,8 +2359,8 @@
     {
       "id": 22,
       "type": "piechart",
-      "title": "Tool Decision Sources (24h)",
-      "description": "How tool execution decisions were authorized over the last 24 hours. Config = approved via CLAUDE.md or settings. User temporary = approved once for the session. User permanent = added to always-allow list.",
+      "title": "Tool Decision Sources",
+      "description": "How tool execution decisions were authorized over the selected time range. Config = approved via CLAUDE.md or settings. User temporary = approved once for the session. User permanent = added to always-allow list.",
       "gridPos": {
         "x": 8,
         "y": 61,
@@ -2417,8 +2417,8 @@
     {
       "id": 30,
       "type": "piechart",
-      "title": "MCP Server Token Attribution (24h)",
-      "description": "Token consumption attributed to MCP server calls in the last 24 hours. Only turns that invoked an MCP tool carry the mcp_server_name label. Shows which MCP integrations (e.g. linear) are driving context size and cost.",
+      "title": "MCP Server Token Attribution",
+      "description": "Token consumption attributed to MCP server calls over the selected time range. Only turns that invoked an MCP tool carry the mcp_server_name label. Shows which MCP integrations (e.g. linear) are driving context size and cost.",
       "gridPos": {
         "x": 16,
         "y": 61,
@@ -2466,7 +2466,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by(mcp_server_name)(increase(claude_code_token_usage_tokens_total{mcp_server_name!=\"\"}[24h]))",
+          "expr": "sum by(mcp_server_name)(increase(claude_code_token_usage_tokens_total{mcp_server_name!=\"\"}[$__range]))",
           "legendFormat": "{{mcp_server_name}}",
           "instant": true,
           "refId": "A"
@@ -2476,8 +2476,8 @@
     {
       "id": 28,
       "type": "bargauge",
-      "title": "Top Skills by API-Equivalent Cost (24h)",
-      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Pay-as-you-go API list price attributed to named skills in the last 24 hours; on a subscription plan you are not charged this. The skill_name label is set whenever Claude Code invokes a skill. Turns without a skill are excluded. High-cost skills often have large context windows or expensive prompt templates worth reviewing.",
+      "title": "Top Skills by API-Equivalent Cost",
+      "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Pay-as-you-go API list price attributed to named skills over the selected time range; on a subscription plan you are not charged this. The skill_name label is set whenever Claude Code invokes a skill. Turns without a skill are excluded. High-cost skills often have large context windows or expensive prompt templates worth reviewing.",
       "gridPos": {
         "x": 0,
         "y": 69,
@@ -2530,7 +2530,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sort_desc(sum by(skill_name)(increase(claude_code_cost_usage_USD_total{skill_name!=\"\"}[24h])))",
+          "expr": "sort_desc(sum by(skill_name)(increase(claude_code_cost_usage_USD_total{skill_name!=\"\"}[$__range])))",
           "legendFormat": "{{skill_name}}",
           "instant": true,
           "refId": "A"
@@ -2540,8 +2540,8 @@
     {
       "id": 29,
       "type": "bargauge",
-      "title": "Top Skills by Effective Tokens (24h)",
-      "description": "Effective (non-cacheRead) token consumption per skill in the last 24 hours. A skill with high tokens here but low cost in the panel to the left is getting strong cache reuse. A skill high in both is a genuine cost driver.",
+      "title": "Top Skills by Effective Tokens",
+      "description": "Effective (non-cacheRead) token consumption per skill over the selected time range. A skill with high tokens here but low cost in the panel to the left is getting strong cache reuse. A skill high in both is a genuine cost driver.",
       "gridPos": {
         "x": 12,
         "y": 69,
@@ -2594,7 +2594,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sort_desc(sum by(skill_name)(increase(claude_code_token_usage_tokens_total{skill_name!=\"\",type!=\"cacheRead\"}[24h])))",
+          "expr": "sort_desc(sum by(skill_name)(increase(claude_code_token_usage_tokens_total{skill_name!=\"\",type!=\"cacheRead\"}[$__range])))",
           "legendFormat": "{{skill_name}}",
           "instant": true,
           "refId": "A"
@@ -2865,8 +2865,8 @@
     {
       "id": 33,
       "type": "stat",
-      "title": "Request Errors (24h)",
-      "description": "Count of failed requests in the last 24 hours — including rate-limit rejections, network errors, and model errors returned by Anthropic's servers. Applies to everyone regardless of plan or billing. Green at zero; any errors turn the panel yellow, 5+ turns it red. Drill into the Logs dashboard for detail.",
+      "title": "Request Errors",
+      "description": "Count of failed requests over the selected time range — including rate-limit rejections, network errors, and model errors returned by Anthropic's servers. Applies to everyone regardless of plan or billing. Green at zero; any errors turn the panel yellow, 5+ turns it red. Drill into the Logs dashboard for detail.",
       "gridPos": {
         "x": 12,
         "y": 81,

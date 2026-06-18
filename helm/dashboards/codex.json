@@ -956,7 +956,7 @@
     {
       "id": 60,
       "type": "stat",
-      "title": "Git Commands (24h)",
+      "title": "Git Commands",
       "description": "Count of shell tool calls whose command text contains 'git ' — a proxy for git activity. Codex emits no native git metrics, so this is derived from the command stream (codex.tool_result arguments).",
       "gridPos": {
         "x": 0,
@@ -1010,7 +1010,7 @@
     {
       "id": 61,
       "type": "stat",
-      "title": "Commits (24h)",
+      "title": "Commits",
       "description": "Count of shell tool calls containing 'git commit' — a proxy for commits made by Codex. Derived from command text, not a native counter (Codex does not emit one). Pairs with Claude Code's Commits panel.",
       "gridPos": {
         "x": 8,
@@ -1064,7 +1064,7 @@
     {
       "id": 62,
       "type": "stat",
-      "title": "File Edit Actions (24h)",
+      "title": "File Edit Actions",
       "description": "Shell tool calls that write or patch files (Set-Content, Out-File, apply_patch, Add-Content, or shell redirection into a file) — a proxy for code edits. Codex routes file edits through the shell, so this is command-derived, not a line count.",
       "gridPos": {
         "x": 16,
