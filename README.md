@@ -1,4 +1,4 @@
-![Claude Code observability dashboard — Cost section with the API-equivalent banner](docs/img/dashboard-hero.png)
+![Claude Code observability dashboard — full view across all five sections](docs/img/dashboard-full.png)
 
 
 # claude-code-observability
@@ -472,6 +472,8 @@ The dashboard is organized into five collapsible sections: **Cost (API-Equivalen
 
 ### 💵 Cost — API-Equivalent (NOT your actual bill)
 
+![Cost section](docs/img/section-cost.png)
+
 Every panel in this section is denominated in **API-equivalent cost** — what your usage would cost at pay-as-you-go API list prices if you had no subscription. On a Pro/Max/Team plan you are not charged these amounts (see the [note on cost figures](#-a-note-on-the-cost-figures) above). They remain useful as a measure of usage intensity and of the value you're getting from a flat-fee plan.
 
 #### API-Equivalent Burn Rate
@@ -522,6 +524,8 @@ Hourly usage (measured via API-equivalent cost) expressed as percentage deviatio
 
 ### 🔢 Tokens & Usage
 
+![Tokens & Usage section](docs/img/section-tokens.png)
+
 #### Effective Tokens — All Models (24h)
 
 Actual effective (non-cacheRead) tokens consumed across all models in the last 24 hours, with a 7-day sparkline trend. These are the tokens that count toward Anthropic's usage limits — cacheRead tokens are excluded because they don't count the same way. This is a real measured volume, **not** a percentage of any limit: OTel telemetry can't reconstruct your quota gauge because the weekly reset boundary isn't exported. For true remaining quota, run `/usage` in the Claude Code CLI.
@@ -557,6 +561,8 @@ Percentage of input-side tokens served from Anthropic's prompt cache. Above 80% 
 ---
 
 ### 🚀 Productivity & Output
+
+![Productivity & Output section](docs/img/section-productivity.png)
 
 #### Code Edit Acceptance Rate %
 
@@ -594,6 +600,8 @@ Total tokens per API-equivalent dollar, broken down by model, over the selected 
 
 ### 🛠️ Tools, MCP & Skills
 
+![Tools, MCP & Skills section](docs/img/section-tools.png)
+
 #### Tool Usage Breakdown
 
 Donut chart of tool calls by type over the selected time range, sourced from structured logs. Covers all tools: Bash, Read, Edit, Write, Glob, Grep, and others. Heavy Bash usage points to shell-and-test work; heavy Edit/Write usage is more code generation.
@@ -625,6 +633,8 @@ Character count distribution across five buckets: under 100, 100–499, 500–99
 ---
 
 ### ⚡ Performance
+
+![Performance section](docs/img/section-performance.png)
 
 #### Response Latency p95 by Model
 
