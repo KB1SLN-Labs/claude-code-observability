@@ -7,3 +7,6 @@ otel-collector/config.local.yaml
 .env
 .env.grafana-cloud
 helm/values.local.yaml
+
+# local editor config — personal, not project state
+*.code-workspace
