@@ -1,7 +1,7 @@
 ![Claude Code observability dashboard — full view across all five sections](docs/img/dashboard-full.png)
 
 
-# claude-code-observability
+# agent-observability
 
 A self-hosted monitoring stack for [Claude Code](https://claude.ai/code) **and [OpenAI Codex](https://openai.com/codex/)**. All telemetry stays in your own environment — nothing is sent to Anthropic, OpenAI, or any third-party service. Both tools already emit OpenTelemetry data throughout their operation — covering model requests, tool executions, prompts, edits, and session activity; this stack collects it, stores it, and surfaces it as Grafana dashboards.
 
@@ -161,8 +161,8 @@ Run a Codex command or a desktop session, then open the **Codex** dashboard in G
 **1. Clone the repo:**
 
 ```bash
-git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
-cd claude-code-observability
+git clone https://github.com/KB1SLN-Labs/agent-observability.git
+cd agent-observability
 ```
 
 **2. (Optional) Adjust ports:**
@@ -254,8 +254,8 @@ Manifests are in the `k8s/` directory and use [Kustomize](https://kustomize.io/)
 **1. Clone the repo:**
 
 ```bash
-git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
-cd claude-code-observability
+git clone https://github.com/KB1SLN-Labs/agent-observability.git
+cd agent-observability
 ```
 
 **2. Deploy to your cluster:**
@@ -321,8 +321,8 @@ The Helm chart is in the `helm/` directory. It deploys the same four-service sta
 **1. Clone the repo:**
 
 ```bash
-git clone https://github.com/KB1SLN-Labs/claude-code-observability.git
-cd claude-code-observability
+git clone https://github.com/KB1SLN-Labs/agent-observability.git
+cd agent-observability
 ```
 
 **2. Install the chart:**
@@ -420,7 +420,7 @@ The only files that changed for the dashboard update are the two dashboard JSONs
 **1. Pull the latest repo in all cases:**
 
 ```bash
-cd claude-code-observability
+cd agent-observability
 git pull
 ```
 
