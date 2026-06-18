@@ -1806,7 +1806,7 @@
       "description": "95th percentile WebSocket round-trip (websocket_event duration_ms) grouped by model. Codex uses WebSocket transport, so this is the available latency signal. Yellow at 5s, red at 15s.",
       "gridPos": {
         "x": 0,
-        "y": 69,
+        "y": 79,
         "w": 12,
         "h": 6
       },
@@ -1877,7 +1877,7 @@
       "description": "Average WebSocket round-trip duration per hour by model. Rising latency can indicate larger context or server backpressure.",
       "gridPos": {
         "x": 12,
-        "y": 69,
+        "y": 79,
         "w": 12,
         "h": 6
       },
@@ -1940,7 +1940,7 @@
       "description": "Count of WebSocket events with success=\"false\" — failed transport round-trips. Green at zero; any failures turn it yellow, 5+ red.",
       "gridPos": {
         "x": 0,
-        "y": 75,
+        "y": 85,
         "w": 8,
         "h": 4
       },
@@ -2010,7 +2010,7 @@
       "description": "WebSocket event throughput per minute — a measure of how chatty Codex's transport is. Spikes track active generation.",
       "gridPos": {
         "x": 8,
-        "y": 75,
+        "y": 85,
         "w": 16,
         "h": 4
       },
@@ -2068,13 +2068,466 @@
       ]
     },
     {
+      "id": 80,
+      "type": "stat",
+      "title": "Avg TTFT (ms)",
+      "description": "Average time to first token (codex.turn_ttft duration_ms) over the selected range. Green < 5s, yellow < 15s, red above.",
+      "gridPos": {
+        "x": 0,
+        "y": 69,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No data",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5000
+              },
+              {
+                "color": "red",
+                "value": 15000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "instant": true,
+          "expr": "avg_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.turn_ttft\" | unwrap attributes_duration_ms [$__range])",
+          "legendFormat": "Avg TTFT (ms)"
+        }
+      ]
+    },
+    {
+      "id": 81,
+      "type": "stat",
+      "title": "Avg API Latency (ms)",
+      "description": "Average API request round-trip (codex.api_request duration_ms, real model requests) over the selected range. Green < 30s, yellow < 90s, red above.",
+      "gridPos": {
+        "x": 6,
+        "y": 69,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No data",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30000
+              },
+              {
+                "color": "red",
+                "value": 90000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "instant": true,
+          "expr": "avg_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | __error__=\"\" | unwrap attributes_duration_ms [$__range])",
+          "legendFormat": "Avg API Latency (ms)"
+        }
+      ]
+    },
+    {
+      "id": 82,
+      "type": "bargauge",
+      "title": "p95 API Latency by Model (ms)",
+      "description": "95th percentile API request round-trip duration by model (codex.api_request). This is the full HTTP round-trip to OpenAI's Responses endpoint, complementary to the WebSocket transport latency above.",
+      "gridPos": {
+        "x": 12,
+        "y": 69,
+        "w": 12,
+        "h": 4
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30000
+              },
+              {
+                "color": "red",
+                "value": 90000
+              }
+            ]
+          },
+          "mappings": [],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "instant": true,
+          "legendFormat": "{{attributes_model}}",
+          "expr": "quantile_over_time(0.95, {service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | __error__=\"\" | unwrap attributes_duration_ms [$__range]) by (attributes_model)"
+        }
+      ]
+    },
+    {
+      "id": 83,
+      "type": "timeseries",
+      "title": "API Latency Over Time — by Model",
+      "description": "Average API request round-trip per hour by model (codex.api_request). Rising latency can indicate larger context or server-side slowdowns.",
+      "gridPos": {
+        "x": 0,
+        "y": 73,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "legendFormat": "{{attributes_model}}",
+          "expr": "avg_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | __error__=\"\" | unwrap attributes_duration_ms [$__auto]) by (attributes_model)"
+        }
+      ]
+    },
+    {
+      "id": 84,
+      "type": "timeseries",
+      "title": "TTFT Over Time — by Model",
+      "description": "Average time to first token per hour by model (codex.turn_ttft). How quickly the model starts responding.",
+      "gridPos": {
+        "x": 12,
+        "y": 73,
+        "w": 12,
+        "h": 6
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "legendFormat": "{{attributes_model}}",
+          "expr": "avg_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.turn_ttft\" | unwrap attributes_duration_ms [$__auto]) by (attributes_model)"
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "type": "table",
+      "title": "API Request Errors — HTTP Status",
+      "description": "Count of non-200 API responses by HTTP status code (codex.api_request). Empty is healthy.",
+      "gridPos": {
+        "x": 0,
+        "y": 89,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          }
+        },
+        "overrides": []
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "attributes_http_response_status_code": "HTTP Status",
+              "Value": "Error Count"
+            },
+            "excludeByName": {
+              "Time": true
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "format": "table",
+          "instant": true,
+          "expr": "sum by (attributes_http_response_status_code)(count_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | attributes_http_response_status_code!=\"200\" [$__range]))"
+        }
+      ]
+    },
+    {
+      "id": 86,
+      "type": "stat",
+      "title": "API Requests (Responses)",
+      "description": "Count of real API requests over the selected range (codex.api_request with a model set, excludes /models housekeeping calls).",
+      "gridPos": {
+        "x": 12,
+        "y": 89,
+        "w": 12,
+        "h": 5
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [],
+          "noValue": "No data",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "refId": "A",
+          "instant": true,
+          "expr": "sum(count_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | attributes_model!=\"\" [$__range]))",
+          "legendFormat": "API Requests (Responses)"
+        }
+      ]
+    },
+    {
       "id": 204,
       "type": "row",
       "title": "💬 Sessions & Conversations",
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 79,
+        "y": 94,
         "w": 24,
         "h": 1
       },
@@ -2087,7 +2540,7 @@
       "description": "Distribution of conversations by model (codex.conversation_starts model).",
       "gridPos": {
         "x": 0,
-        "y": 80,
+        "y": 95,
         "w": 6,
         "h": 6
       },
@@ -2145,7 +2598,7 @@
       "description": "Split of conversations by approval_policy (never / on-request / on-failure / untrusted).",
       "gridPos": {
         "x": 6,
-        "y": 80,
+        "y": 95,
         "w": 6,
         "h": 6
       },
@@ -2203,7 +2656,7 @@
       "description": "CLI (codex_exec) vs desktop app (codex-app-server) conversation share.",
       "gridPos": {
         "x": 12,
-        "y": 80,
+        "y": 95,
         "w": 6,
         "h": 6
       },
@@ -2261,7 +2714,7 @@
       "description": "Distribution of conversations by reasoning_effort (low / medium / high / xhigh). A heavy xhigh share drives up reasoning-token usage.",
       "gridPos": {
         "x": 18,
-        "y": 80,
+        "y": 95,
         "w": 6,
         "h": 6
       },
@@ -2324,7 +2777,7 @@
       "description": "New Codex conversations started per hour across both surfaces.",
       "gridPos": {
         "x": 0,
-        "y": 86,
+        "y": 101,
         "w": 24,
         "h": 5
       },
@@ -2388,7 +2841,7 @@
       "description": "What launched each conversation (codex.conversation_starts originator). 'Claude_Code' means Claude Code spawned Codex; 'codex_exec' is the CLI used directly. Useful for spotting agent-to-agent orchestration.",
       "gridPos": {
         "x": 0,
-        "y": 91,
+        "y": 106,
         "w": 8,
         "h": 5
       },
@@ -2447,7 +2900,7 @@
       "description": "Average tool calls per conversation (total tool_result events divided by distinct conversations that used tools) and the count of those conversations, over the selected range.",
       "gridPos": {
         "x": 8,
-        "y": 91,
+        "y": 106,
         "w": 16,
         "h": 5
       },
@@ -2532,7 +2985,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 96,
+        "y": 111,
         "w": 24,
         "h": 1
       },
@@ -2545,7 +2998,7 @@
       "description": "Raw Codex log stream (both surfaces), excluding high-volume websocket noise. Click a line to expand the full structured payload.",
       "gridPos": {
         "x": 0,
-        "y": 97,
+        "y": 112,
         "w": 24,
         "h": 10
       },
