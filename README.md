@@ -1,4 +1,4 @@
-<img width="3808" height="1815" alt="screenshot1" src="https://github.com/user-attachments/assets/311c28be-dff8-4651-b629-7943705e70d0" />
+![Claude Code observability dashboard — Cost section with the API-equivalent banner](docs/img/dashboard-hero.png)
 
 
 # claude-code-observability
