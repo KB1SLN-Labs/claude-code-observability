@@ -704,38 +704,48 @@ Full filterable log stream. Set the Level variable to narrow by severity. Paste 
 
 ![Codex dashboard — full view](docs/img/codex-dashboard-full.png)
 
-Monitors **OpenAI Codex** across both surfaces — the **Codex CLI** (`service_name = codex_exec`) and the **Codex desktop app** (`service_name = codex-app-server`). Every panel is log-sourced from Codex's OpenTelemetry export. Codex uses a WebSocket/SSE transport, so latency comes from WebSocket round-trip durations and token counts come from SSE completion events. There is no per-request dollar cost in Codex's telemetry, so this dashboard tracks **usage and performance**, not spend. Organized into five sections plus a live event feed.
+Monitors **OpenAI Codex** across both surfaces — the **Codex CLI** (`service_name = codex_exec`) and the **Codex desktop app** (`service_name = codex-app-server`). Every panel is log-sourced from Codex's OpenTelemetry export. Codex uses a WebSocket/SSE transport, so latency comes from WebSocket round-trip durations and token counts come from SSE completion events. There is no per-request dollar cost in Codex's telemetry, so this dashboard tracks **usage and performance**, not spend.
 
-#### 📊 Overview — Key Indicators
-
-![Codex Overview section](docs/img/codex-section-overview.png)
-
-Six KPIs across the top: **Total Conversations** (distinct `codex.conversation_starts`), **Total Turns** (completed `codex.sse_event` responses), **Total Tool Calls**, **Tool Success Rate %** (red below 70%, green above 85%), **p95 Turn Latency** (worst-model WebSocket round-trip), and **Total Tokens** (input + output). Below them, **Event Volume by Type** and **Turns Over Time** show the rhythm of activity.
+The section structure deliberately **mirrors the Claude Code dashboard** — Tokens & Usage, Productivity & Output, Tools/MCP/Skills, and Performance appear in the same order with the same names — so you can move between the two dashboards without re-orienting. Codex adds two of its own sections (Sessions & Conversations, Live Event Feed) for data Claude Code doesn't expose. Where Claude Code has a Cost section, Codex has none — its telemetry carries no cost figures.
 
 #### 🔢 Tokens & Usage
 
 ![Codex Tokens section](docs/img/codex-section-tokens.png)
 
-Four token stats — **Input**, **Output**, **Cached**, and **Reasoning** — sourced from `codex.sse_event`. **Token Usage Over Time** stacks all four by hour to spot context growth, and **Tokens by Surface** splits output-token volume between the CLI and the desktop app.
+Token stats — **Input**, **Output**, **Cached**, and **Reasoning** — sourced from `codex.sse_event`, alongside totals for **Tokens**, **Turns**, and **Conversations**. **Token Usage Over Time** stacks token types by hour to spot context growth, and **Tokens by Surface** splits output-token volume between the CLI and the desktop app.
 
-#### ⚡ Performance & Latency
+#### 🚀 Productivity & Output
 
-![Codex Performance section](docs/img/codex-section-performance.png)
+![Codex Productivity section](docs/img/codex-section-productivity.png)
 
-**p95 Turn Latency by Model** (WebSocket round-trip, yellow at 5s / red at 15s), **Avg Turn Latency Over Time by Model**, **Transport Errors** (WebSocket events with `success="false"`), and **WebSocket Round-Trip Rate** (transport throughput per minute).
+Codex's output signals: **Total Tool Calls**, **Tool Success Rate %** (red below 70%, green above 85%), and **p95 Turn Latency**, plus **Turns Over Time**, **Event Volume by Type**, and **Prompts Per Hour**. The parallel to Claude Code's Productivity & Output section — what the agent is actually producing and how reliably.
 
-#### 🛠️ Tools & Decisions
+**Code-activity proxies.** Claude Code emits native git telemetry (lines-of-code, commit, and edit-decision counters); **Codex emits none of this** — its OTel stream has no lines-of-code, commit, or diff fields. To give a comparable signal anyway, this section derives proxies from Codex's shell command stream (the `arguments` field on `codex.tool_result`): **Git Commands (24h)**, **Commits (24h)** (`git commit` invocations), **File Edit Actions (24h)** (`Set-Content` / `Out-File` / `apply_patch` etc.), and a **Code Activity Over Time** chart. These are *command-derived counts*, not native metrics or true line counts — Codex routes file edits through the shell, so the proxy counts edit *actions*, not edited lines. Treat them as activity indicators, not exact figures.
+
+#### 🛠️ Tools, MCP & Skills
 
 ![Codex Tools section](docs/img/codex-section-tools.png)
 
 **Tool Usage Breakdown** (by `tool_name`), **Tool Decision Outcomes** (approved / denied / ask), and **Decision Source** (config policy vs interactive approval), plus **Tool Calls Over Time** and **MCP Server Attribution** for tool calls that ran through an MCP server.
 
-#### 💬 Sessions & Conversations
+#### ⚡ Performance
+
+![Codex Performance section](docs/img/codex-section-performance.png)
+
+**p95 Turn Latency by Model** (WebSocket round-trip, yellow at 5s / red at 15s), **Avg Turn Latency Over Time by Model**, **Transport Errors** (WebSocket events with `success="false"`), and **WebSocket Round-Trip Rate** (transport throughput per minute).
+
+#### 💬 Sessions & Conversations  *(Codex-specific)*
 
 ![Codex Sessions section](docs/img/codex-section-sessions.png)
 
-Conversation distribution by **Model**, **Approval Policy**, **Surface** (CLI vs desktop), and **Reasoning Effort**, plus **New Conversations Over Time** and **Prompts Per Hour**.
+Conversation distribution by **Model**, **Approval Policy**, **Surface** (CLI vs desktop), and **Reasoning Effort**, plus **New Conversations Over Time**.
 
-#### 📜 Live Event Feed
+#### 📜 Live Event Feed  *(Codex-specific)*
 
 The raw Codex event stream (both surfaces), with high-volume WebSocket noise filtered out. Click any line to expand the full structured payload.
+
+### Codex — Logs
+
+![Codex Logs dashboard](docs/img/codex-logs-full.png)
+
+A dedicated Codex log explorer, linked from the main Codex dashboard — the counterpart to the Claude Code Logs dashboard. Filter by **Surface** (CLI / desktop), **Event** type (conversation_starts, user_prompt, sse_event, tool_result, tool_decision, websocket_event), and **Conversation ID**. Stat tiles surface **Tool Failures**, **Transport Errors**, **Total Entries**, and **Conversations**; **Log Volume Over Time** overlays tool failures on total volume; and the **Log Stream** shows the filtered raw events with expandable structured payloads.

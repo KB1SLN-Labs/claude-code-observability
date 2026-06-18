@@ -1,0 +1,220 @@
+{
+  "annotations": { "list": [] },
+  "description": "Codex raw log stream — filter by surface, event type, and conversation ID to investigate activity across the Codex CLI and desktop app.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "arrow-left",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "← Codex",
+      "tooltip": "Back to main dashboard",
+      "type": "link",
+      "url": "/d/codex-observability"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["codex"],
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Codex — Logs",
+  "uid": "codex-logs",
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0,
+        "includeAll": true,
+        "allValue": "codex-app-server|codex_exec",
+        "label": "Surface",
+        "multi": false,
+        "name": "surface",
+        "options": [
+          { "selected": false, "text": "CLI (codex_exec)", "value": "codex_exec" },
+          { "selected": false, "text": "Desktop (codex-app-server)", "value": "codex-app-server" }
+        ],
+        "query": "codex_exec,codex-app-server",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "hide": 0,
+        "includeAll": true,
+        "allValue": ".*",
+        "label": "Event",
+        "multi": false,
+        "name": "event",
+        "options": [
+          { "selected": false, "text": "conversation_starts", "value": "codex.conversation_starts" },
+          { "selected": false, "text": "user_prompt", "value": "codex.user_prompt" },
+          { "selected": false, "text": "sse_event (tokens)", "value": "codex.sse_event" },
+          { "selected": false, "text": "tool_result", "value": "codex.tool_result" },
+          { "selected": false, "text": "tool_decision", "value": "codex.tool_decision" },
+          { "selected": false, "text": "websocket_event", "value": "codex.websocket_event" }
+        ],
+        "query": "codex.conversation_starts,codex.user_prompt,codex.sse_event,codex.tool_result,codex.tool_decision,codex.websocket_event",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": { "selected": false, "text": "", "value": "" },
+        "hide": 0,
+        "label": "Conversation ID",
+        "name": "conversation_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Tool Failures",
+      "description": "Tool results with success=\"false\" in the selected range — the closest Codex signal to an error.",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto", "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "decimals": 0, "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] },
+          "mappings": [], "noValue": "0"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+          "expr": "sum(count_over_time({service_name=~\"$surface\"} | json | attributes_event_name=\"codex.tool_result\" | attributes_success=\"false\" [$__range]))",
+          "refId": "A", "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Transport Errors",
+      "description": "WebSocket events with success=\"false\" in the selected range.",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto", "textMode": "auto", "colorMode": "background", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "decimals": 0, "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] },
+          "mappings": [], "noValue": "0"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+          "expr": "sum(count_over_time({service_name=~\"$surface\"} | json | attributes_event_name=~\"codex.websocket_event|codex.websocket_request\" | attributes_success=\"false\" [$__range]))",
+          "refId": "A", "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Total Entries",
+      "description": "Total Codex log entries (selected surface) in the time range.",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] }, "mappings": [] }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+          "expr": "sum(count_over_time({service_name=~\"$surface\"} [$__range]))",
+          "refId": "A", "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Conversations",
+      "description": "Conversation-start events (selected surface) in the time range.",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "none", "justifyMode": "center" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "text", "value": null } ] }, "mappings": [] }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+          "expr": "sum(count_over_time({service_name=~\"$surface\"} | json | attributes_event_name=\"codex.conversation_starts\" [$__range]))",
+          "refId": "A", "instant": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Log Volume Over Time",
+      "description": "Codex log entries per minute by surface, with tool failures overlaid. Failure spikes are the signal to open the log stream below and investigate.",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" }, "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "decimals": 0, "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 1, "fillOpacity": 10, "gradientMode": "none", "spanNulls": false, "showPoints": "never", "stacking": { "mode": "none", "group": "A" }, "axisPlacement": "auto", "scaleDistribution": { "type": "linear" }, "hideFrom": { "legend": false, "tooltip": false, "viz": false } }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "tool failures" }, "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ] },
+          { "matcher": { "id": "byName", "options": "total" }, "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } }, { "id": "custom.fillOpacity", "value": 0 } ] }
+        ]
+      },
+      "targets": [
+        { "datasource": { "type": "loki", "uid": "${loki_datasource}" }, "expr": "sum(count_over_time({service_name=~\"$surface\"} | json | attributes_event_name=\"codex.tool_result\" | attributes_success=\"false\" [1m]))", "legendFormat": "tool failures", "refId": "A" },
+        { "datasource": { "type": "loki", "uid": "${loki_datasource}" }, "expr": "sum(count_over_time({service_name=~\"$surface\"} [1m]))", "legendFormat": "total", "refId": "B" }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "logs",
+      "title": "Log Stream",
+      "description": "Filtered Codex log entries. Set Surface and Event to narrow; paste a Conversation ID to scope to a single conversation. Click any row to expand the full structured payload. The high-volume websocket_event noise is included only when you select it in the Event filter.",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 18 },
+      "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+      "options": {
+        "dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true,
+        "showCommonLabels": false, "showLabels": true, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "${loki_datasource}" },
+          "expr": "{service_name=~\"$surface\"} | json | attributes_event_name=~\"$event\" |= \"${conversation_id}\"",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
