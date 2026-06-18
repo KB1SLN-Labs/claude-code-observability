@@ -18,6 +18,17 @@
       "tooltip": "Open log explorer",
       "type": "link",
       "url": "/d/claude-code-logs"
+    },
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Codex →",
+      "tooltip": "OpenAI Codex dashboard",
+      "type": "link",
+      "url": "/d/codex-observability"
     }
   ],
   "refresh": "5m",

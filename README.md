@@ -3,9 +3,11 @@
 
 # claude-code-observability
 
-A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). All telemetry stays in your own environment — nothing is sent to Anthropic or any third-party service. Claude Code already emits OpenTelemetry data throughout its operation — covering model requests, tool executions, prompts, edits, and session activity; this stack collects it, stores it, and surfaces it as a Grafana dashboard.
+A self-hosted monitoring stack for [Claude Code](https://claude.ai/code) **and [OpenAI Codex](https://openai.com/codex/)**. All telemetry stays in your own environment — nothing is sent to Anthropic, OpenAI, or any third-party service. Both tools already emit OpenTelemetry data throughout their operation — covering model requests, tool executions, prompts, edits, and session activity; this stack collects it, stores it, and surfaces it as Grafana dashboards.
 
 **Stack:** OpenTelemetry Collector → Prometheus (metrics) + Loki (logs) → Grafana
+
+Two agent dashboards ship with the stack: **Claude Code** (cost, tokens, cache, productivity) and **Codex** (sessions, tokens, latency, tools — log-sourced from Codex's OTel export, covering both the Codex CLI and the desktop app).
 
 > ### 💵 A note on the cost figures
 > Every dollar amount on the dashboard is **API-equivalent cost** — what your usage *would* cost at [pay-as-you-go API list prices](https://platform.claude.com/docs/en/about-claude/pricing) if you had no subscription. **It is not a bill.** Claude Code computes this estimate on every request (the metric is literally documented as *"cost_usd: Estimated cost in USD"*) regardless of how you're billed. If you're on a **Pro / Max / Team** plan you pay a flat monthly fee and are **not** charged these amounts — a high number means you're extracting strong value from your plan. Only metered **API / Console** users actually pay per token. The dashboard makes this explicit with a banner and panel labels so the numbers are never mistaken for money owed.
@@ -115,6 +117,40 @@ After saving, restart Claude Code. New sessions will begin exporting telemetry i
 Open Grafana and check the main dashboard. Within a few minutes of running Claude Code you should see non-zero values in **API-Equivalent Cost Today**, **Total Tokens Today**, and **Active Sessions (24h)**. The **Log Stream** on the Logs dashboard should show entries as well.
 
 If panels stay empty after several minutes, see [Troubleshooting](#troubleshooting).
+
+---
+
+## Configuring Codex
+
+The stack also ships a **Codex** dashboard. [OpenAI Codex](https://openai.com/codex/) has built-in OpenTelemetry support and exports structured log events for conversations, prompts, model turns (with token counts), tool calls, and decisions. Pointing Codex at the same OTel Collector makes its data appear in the Codex dashboard. This works for both the **Codex CLI** and the **Codex desktop app** — they share the same `config.toml` and emit the same events (under service names `codex_exec` and `codex-app-server` respectively).
+
+### Settings
+
+Codex is configured via `~/.codex/config.toml` (`%USERPROFILE%\.codex\config.toml` on Windows). Add an `[otel]` block pointing the log exporter at your collector's OTLP HTTP logs endpoint:
+
+```toml
+[otel]
+environment = "prod"
+log_user_prompt = false   # keep prompt text out of telemetry; prompt_length is still recorded
+
+[otel.exporter.otlp-http]
+endpoint = "http://<your-collector-host>:4318/v1/logs"
+protocol = "binary"
+```
+
+**`endpoint`** — the collector's OTLP HTTP logs URL. Unlike Claude Code (which appends `/v1/logs` automatically), Codex's exporter takes the **full** path including `/v1/logs`. Use `http://localhost:4318/v1/logs` if the stack is on the same machine, or the collector's host/IP otherwise.
+
+**`protocol = "binary"`** — OTLP protobuf over HTTP, which the collector accepts on port 4318.
+
+**`log_user_prompt = false`** — recommended. Codex records `prompt_length` regardless, so the Prompt-per-hour panel works without capturing prompt contents.
+
+The Codex dashboard is log-sourced only — Codex's telemetry carries token counts and latency but no per-request dollar cost, so the dashboard tracks **usage and performance**, not spend. If you also want Codex's traces/metrics elsewhere, configure `[otel.trace_exporter.otlp-http]` / `[otel.metrics_exporter.otlp-http]` separately; the Grafana dashboard only needs the logs exporter above.
+
+After saving, restart Codex (fully quit the desktop app, or start a new CLI session) so it re-reads the config.
+
+### Verifying it's working
+
+Run a Codex command or a desktop session, then open the **Codex** dashboard in Grafana. Within a few minutes you should see non-zero values in **Total Conversations**, **Total Tool Calls**, and **Total Tokens**, and entries in the **Codex Event Stream** at the bottom.
 
 ---
 
@@ -661,3 +697,45 @@ Error, warning, and total log entry counts per minute as a timeseries. Error and
 #### Log Stream
 
 Full filterable log stream. Set the Level variable to narrow by severity. Paste a session ID in the Session ID field to isolate a single session. Click any row to expand the full structured payload.
+
+---
+
+### Codex
+
+![Codex dashboard — full view](docs/img/codex-dashboard-full.png)
+
+Monitors **OpenAI Codex** across both surfaces — the **Codex CLI** (`service_name = codex_exec`) and the **Codex desktop app** (`service_name = codex-app-server`). Every panel is log-sourced from Codex's OpenTelemetry export. Codex uses a WebSocket/SSE transport, so latency comes from WebSocket round-trip durations and token counts come from SSE completion events. There is no per-request dollar cost in Codex's telemetry, so this dashboard tracks **usage and performance**, not spend. Organized into five sections plus a live event feed.
+
+#### 📊 Overview — Key Indicators
+
+![Codex Overview section](docs/img/codex-section-overview.png)
+
+Six KPIs across the top: **Total Conversations** (distinct `codex.conversation_starts`), **Total Turns** (completed `codex.sse_event` responses), **Total Tool Calls**, **Tool Success Rate %** (red below 70%, green above 85%), **p95 Turn Latency** (worst-model WebSocket round-trip), and **Total Tokens** (input + output). Below them, **Event Volume by Type** and **Turns Over Time** show the rhythm of activity.
+
+#### 🔢 Tokens & Usage
+
+![Codex Tokens section](docs/img/codex-section-tokens.png)
+
+Four token stats — **Input**, **Output**, **Cached**, and **Reasoning** — sourced from `codex.sse_event`. **Token Usage Over Time** stacks all four by hour to spot context growth, and **Tokens by Surface** splits output-token volume between the CLI and the desktop app.
+
+#### ⚡ Performance & Latency
+
+![Codex Performance section](docs/img/codex-section-performance.png)
+
+**p95 Turn Latency by Model** (WebSocket round-trip, yellow at 5s / red at 15s), **Avg Turn Latency Over Time by Model**, **Transport Errors** (WebSocket events with `success="false"`), and **WebSocket Round-Trip Rate** (transport throughput per minute).
+
+#### 🛠️ Tools & Decisions
+
+![Codex Tools section](docs/img/codex-section-tools.png)
+
+**Tool Usage Breakdown** (by `tool_name`), **Tool Decision Outcomes** (approved / denied / ask), and **Decision Source** (config policy vs interactive approval), plus **Tool Calls Over Time** and **MCP Server Attribution** for tool calls that ran through an MCP server.
+
+#### 💬 Sessions & Conversations
+
+![Codex Sessions section](docs/img/codex-section-sessions.png)
+
+Conversation distribution by **Model**, **Approval Policy**, **Surface** (CLI vs desktop), and **Reasoning Effort**, plus **New Conversations Over Time** and **Prompts Per Hour**.
+
+#### 📜 Live Event Feed
+
+The raw Codex event stream (both surfaces), with high-volume WebSocket noise filtered out. Click any line to expand the full structured payload.
