@@ -1270,32 +1270,28 @@
 
     {
       "id": 26,
-      "type": "gauge",
-      "title": "Plan Usage — All Models (Weekly)",
-      "description": "Weekly effective-token consumption as a percentage of the Max (20x) all-model limit (13,673,558 tokens, back-calculated from the Claude usage UI). Excludes cacheRead tokens, which Anthropic does not count toward the weekly limit. Resets on a rolling 7-day window. Yellow at 70%, red at 90%.",
+      "type": "stat",
+      "title": "Effective Tokens — All Models (24h)",
+      "description": "Actual effective (non-cacheRead) tokens consumed across all models in the last 24 hours, with a 7-day sparkline showing the daily trend. These are the tokens that count toward Anthropic's usage limits (cacheRead is excluded). This is a real measured volume, not a percentage of limit — OTel telemetry cannot reconstruct Anthropic's quota gauge because the weekly reset boundary is not exported. For your true remaining quota, run /usage in the Claude Code CLI.",
       "gridPos": { "x": 0, "y": 32, "w": 12, "h": 5 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "decimals": 1,
-          "min": 0,
-          "max": 100,
-          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "blue" },
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 90 }
-            ]
+            "steps": [{ "color": "blue", "value": null }]
           },
           "mappings": []
         },
@@ -1304,8 +1300,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "(sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\"}[1w])) / 13673558) * 100",
-          "legendFormat": "All Models",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\"}[24h]))",
+          "legendFormat": "Effective Tokens (24h)",
           "refId": "A"
         }
       ]
@@ -1313,32 +1309,28 @@
 
     {
       "id": 27,
-      "type": "gauge",
-      "title": "Plan Usage — Sonnet Only (Weekly)",
-      "description": "Weekly Sonnet effective-token consumption as a percentage of the Max (20x) Sonnet-specific limit (9,134,619 tokens, back-calculated from the Claude usage UI). Sonnet has a tighter separate cap, so this bar usually fills faster than the all-model bar. Excludes cacheRead tokens. Yellow at 70%, red at 90%.",
+      "type": "stat",
+      "title": "Effective Tokens — Sonnet Only (24h)",
+      "description": "Actual effective (non-cacheRead) Sonnet tokens consumed in the last 24 hours, with a 7-day sparkline trend. Sonnet has its own separate usage cap at Anthropic, which is why it's broken out here. This is a real measured volume, not a percentage of limit — the weekly reset boundary needed to compute a true percentage is not exported in OTel telemetry. Run /usage in the Claude Code CLI for your actual remaining quota.",
       "gridPos": { "x": 12, "y": 32, "w": 12, "h": 5 },
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "options": {
         "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "showPercentChange": true
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percent",
-          "decimals": 1,
-          "min": 0,
-          "max": 100,
-          "color": { "mode": "thresholds" },
+          "unit": "short",
+          "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "purple" },
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 90 }
-            ]
+            "steps": [{ "color": "purple", "value": null }]
           },
           "mappings": []
         },
@@ -1347,8 +1339,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "(sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\",model=~\".*sonnet.*\"}[1w])) / 9134619) * 100",
-          "legendFormat": "Sonnet Only",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\",model=~\".*sonnet.*\"}[24h]))",
+          "legendFormat": "Sonnet Effective Tokens (24h)",
           "refId": "A"
         }
       ]
