@@ -17,6 +17,7 @@ configMapGenerator:
     files:
       - ../grafana/dashboards/claude-code.json
       - ../grafana/dashboards/claude-code-logs.json
+      - ../grafana/dashboards/codex.json
 
 generatorOptions:
   disableNameSuffixHash: true
