@@ -3,20 +3,26 @@
 
 # claude-code-observability
 
-A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). All telemetry stays in your own environment — nothing is sent to Anthropic or any third-party service. Claude Code already emits OpenTelemetry data throughout its operation — covering API calls, tool executions, prompts, edits, and session activity; this stack collects it, stores it, and surfaces it as a Grafana dashboard.
+A self-hosted monitoring stack for [Claude Code](https://claude.ai/code). All telemetry stays in your own environment — nothing is sent to Anthropic or any third-party service. Claude Code already emits OpenTelemetry data throughout its operation — covering model requests, tool executions, prompts, edits, and session activity; this stack collects it, stores it, and surfaces it as a Grafana dashboard.
 
 **Stack:** OpenTelemetry Collector → Prometheus (metrics) + Loki (logs) → Grafana
 
+> ### 💵 A note on the cost figures
+> Every dollar amount on the dashboard is **API-equivalent cost** — what your usage *would* cost at [pay-as-you-go API list prices](https://platform.claude.com/docs/en/about-claude/pricing) if you had no subscription. **It is not a bill.** Claude Code computes this estimate on every request (the metric is literally documented as *"cost_usd: Estimated cost in USD"*) regardless of how you're billed. If you're on a **Pro / Max / Team** plan you pay a flat monthly fee and are **not** charged these amounts — a high number means you're extracting strong value from your plan. Only metered **API / Console** users actually pay per token. The dashboard makes this explicit with a banner and panel labels so the numbers are never mistaken for money owed.
+
 ## What you get
 
-- Real-time API cost burn rate with trend comparison against yesterday and your 7-day average
-- Subagent vs. main session cost breakdown — how much of your spend is autonomous work vs. direct conversation
-- Daily and monthly cost forecasts, plus anomaly detection when an hour's spend deviates from your historical baseline
-- Cache hit rate and cost per 1K tokens — whether your workflow is getting value from prompt caching
+- Real-time **API-equivalent** cost burn rate with trend comparison against yesterday and your 7-day average
+- Subagent vs. main session cost breakdown — how much of your usage is autonomous work vs. direct conversation
+- Daily and monthly cost projections, plus anomaly detection when an hour's usage deviates from your historical baseline
+- Cache hit rate, cache-savings estimate, and cost per 1K tokens — whether your workflow is getting value from prompt caching
 - Per-model token efficiency — tokens per dollar across Haiku, Sonnet, and Opus
-- Lines of code added and removed, with edit acceptance rate and modification velocity
+- Effective (non-cached) token volume, broken out by source and by model
+- Cost and token attribution by **skill**, **MCP server**, and **effort level**
+- Lines of code added and removed, commits, edit acceptance rate, and modification velocity
 - Tool call breakdown by type — Bash, Read, Edit, Write, and others — plus how each execution was authorized
 - Prompt length and frequency patterns
+- Response latency (p95) and request error counts
 - Active CLI time vs. your active time, broken down by session
 - Raw filterable log stream with session drill-down and full structured payloads
 
@@ -104,7 +110,7 @@ After saving, restart Claude Code. New sessions will begin exporting telemetry i
 
 ### Verifying it's working
 
-Open Grafana and check the main dashboard. Within a few minutes of running Claude Code you should see non-zero values in **Total Cost Today**, **Total Tokens Today**, and **Active Sessions (24h)**. The **Log Stream** on the Logs dashboard should show entries as well.
+Open Grafana and check the main dashboard. Within a few minutes of running Claude Code you should see non-zero values in **API-Equivalent Cost Today**, **Total Tokens Today**, and **Active Sessions (24h)**. The **Log Stream** on the Logs dashboard should show entries as well.
 
 If panels stay empty after several minutes, see [Troubleshooting](#troubleshooting).
 
@@ -364,6 +370,69 @@ kubectl delete pvc -n claude-code-observability --all
 
 ---
 
+## Upgrading an existing deployment
+
+If you already have the stack running from an earlier version, this section gets the new dashboard (five sections, API-equivalent cost labeling, plan-usage token panels, skill/MCP/effort attribution, latency and error panels) onto your running install. **No data is lost** — the dashboard is provisioned from config; your metrics and logs in Prometheus and Loki are untouched.
+
+The only files that changed for the dashboard update are the two dashboard JSONs:
+
+- `grafana/dashboards/claude-code.json` (used by Docker Compose and Kubernetes)
+- `helm/dashboards/claude-code.json` (used by Helm — identical content)
+
+**1. Pull the latest repo in all cases:**
+
+```bash
+cd claude-code-observability
+git pull
+```
+
+Then follow the steps for your deployment method.
+
+### Docker Compose
+
+The dashboard JSON is mounted into the Grafana container and reloaded by Grafana's provisioner automatically (within ~30s). After `git pull`, restart Grafana so it re-reads the mounted file:
+
+```bash
+docker compose up -d --force-recreate grafana
+```
+
+If you don't see the new panels after a minute, hard-refresh the browser (Grafana caches dashboards client-side).
+
+### Kubernetes (Kustomize)
+
+The dashboard is delivered as a ConfigMap generated from the JSON files. Re-apply to regenerate it, then restart Grafana to pick up the new ConfigMap content:
+
+```bash
+kubectl apply -k k8s/
+kubectl rollout restart deployment grafana -n claude-code-observability
+```
+
+> **Note:** a Grafana pod that has been running since before the ConfigMap changed will not always hot-reload a mounted ConfigMap reliably. The `rollout restart` above guarantees the new dashboard is mounted. Your PersistentVolumeClaims (metrics/logs) are not affected by the restart.
+
+### Helm
+
+```bash
+helm upgrade --install claude-code ./helm --namespace claude-code-observability
+kubectl rollout restart deployment claude-code-grafana -n claude-code-observability
+```
+
+`upgrade --install` re-renders the dashboard ConfigMap from `helm/dashboards/claude-code.json`. The `rollout restart` ensures the running Grafana pod mounts the updated content. PVCs and stored data are preserved.
+
+### Verifying the upgrade
+
+Open the main dashboard. You should see five section headers — **💵 Cost — API-Equivalent**, **🔢 Tokens & Usage**, **🚀 Productivity & Output**, **🛠️ Tools, MCP & Skills**, **⚡ Performance** — and a banner at the top explaining the cost figures. If you still see the old flat layout, hard-refresh the browser and confirm the Grafana pod/container was restarted.
+
+### What changed in this version
+
+- **Cost panels relabeled as "API-equivalent."** The dollar figures were always estimated API list prices, not actual subscription charges — the labels and a new banner now make this explicit so the numbers aren't mistaken for a bill.
+- **New plan-usage token panels.** *Effective Tokens — All Models / Sonnet Only* show real (non-cached) token volume, the tokens that count toward Anthropic's limits. (An earlier draft tried to show these as a percentage-of-limit gauge, but OTel can't reconstruct the quota reset, so they report honest volume instead — use `/usage` in the CLI for true remaining quota.)
+- **New attribution panels.** Cost and tokens broken down by **skill**, **MCP server**, and **effort level**.
+- **New output and performance panels.** **Commits**, **Response Latency p95 by Model**, and **Request Errors**.
+- **Reorganized into five labeled sections** with no dead space.
+- No changes to the OTel Collector, Prometheus, or Loki configuration — telemetry collection is unchanged, so no Claude Code reconfiguration is needed.
+
+---
+
 ## Troubleshooting
 
 **Panels show no data after setup**
@@ -375,7 +444,7 @@ kubectl delete pvc -n claude-code-observability --all
 
 **Metrics appear but log-sourced panels are empty**
 
-Log-sourced panels include Tool Usage Breakdown, Tool Decision Sources, Prompts Per Hour, and Prompt Length Distribution. If these show no data while cost and token panels are working, the log pipeline specifically isn't reaching Loki. Check:
+Log-sourced panels include Tool Usage Breakdown, Tool Decision Sources, Prompts Per Hour, Prompt Length Distribution, Response Latency p95 by Model, and Request Errors. If these show no data while cost and token panels are working, the log pipeline specifically isn't reaching Loki. Check:
 
 1. The Loki container or pod is running and healthy.
 2. The OTel Collector logs don't show errors exporting to Loki (`docker compose logs otel-collector` or `kubectl logs -n claude-code-observability deployment/loki`).
@@ -395,131 +464,173 @@ There are two dashboards: **Claude Code** (main) and **Claude Code — Logs**.
 
 The default time range is the last 24 hours. The dashboard refreshes every 5 minutes. Most stat panels show a current value alongside a 7-day rolling average. Panels with sparklines also show a percentage change indicator comparing the current 24-hour window to the same window yesterday.
 
----
-
-#### Cost Summary
-
-Five stat panels across the top row.
-
-#### Real-Time Cost Burn Rate
-
-Current spend rate in dollars per hour, calculated from a 30-minute trailing window. The window is intentionally wide — Claude Code emits metrics per API turn rather than continuously, so a shorter window zeros out between turns. Background turns green below $0.50/hr, yellow up to $2.00/hr, red above.
-
-#### Total Cost Today
-
-Total API spend in the last 24 hours alongside the 7-day rolling daily average. The percentage change compares today's 24-hour window to yesterday's. If today is well above your 7-day average and trending up, check whether a session is accumulating more context than usual.
-
-#### Subagent Cost (24h)
-
-Cost attributed to spawned subagent tasks — parallel research, background code review, multi-agent work. Compare against Main Session Cost to understand what fraction of your spend is autonomous parallel work versus direct conversation. Includes the 7-day average and today-vs-yesterday change.
-
-#### Main Session Cost (24h)
-
-Cost from primary conversation turns: your prompts and Claude's direct responses. Excludes subagent and auxiliary tasks. Includes the 7-day average and percentage change.
-
-#### Code Edit Acceptance Rate %
-
-Percentage of Claude's proposed file edits that were accepted in the last 24 hours, plus the 7-day average. Below 80% is worth investigating — the most common causes are context drift mid-session, an ambiguous task description, or Claude losing track of the codebase structure. Background turns red below 60%, yellow up to 80%, green above. Shows "No edits" if no edit activity occurred in the window.
+The dashboard is organized into five collapsible sections: **Cost (API-Equivalent)**, **Tokens & Usage**, **Productivity & Output**, **Tools, MCP & Skills**, and **Performance**. A banner at the top restates that all dollar figures are API-equivalent estimates, not actual charges.
 
 ---
 
-#### Projections and Per-Session Metrics
+### 💵 Cost — API-Equivalent (NOT your actual bill)
 
-#### Cost Forecast
+Every panel in this section is denominated in **API-equivalent cost** — what your usage would cost at pay-as-you-go API list prices if you had no subscription. On a Pro/Max/Team plan you are not charged these amounts (see the [note on cost figures](#-a-note-on-the-cost-figures) above). They remain useful as a measure of usage intensity and of the value you're getting from a flat-fee plan.
 
-Daily and monthly cost projections extrapolated from the current 6-hour burn rate. The 6-hour window smooths out short spikes — what you see reflects sustained activity, making it a reliable early signal of a runaway session.
+#### API-Equivalent Burn Rate
 
-#### Average Cost / Session
+Current usage rate in API-equivalent dollars per hour, calculated from a 30-minute trailing window. The window is intentionally wide — Claude Code emits metrics per request rather than continuously, so a shorter window zeros out between turns. Background turns green below $0.50/hr, yellow up to $2.00/hr, red above.
 
-Average API spend per session over the last 24 hours compared to the 7-day average. A rising number over multiple days usually means sessions are running longer without being compacted — context accumulates and each turn costs more to process.
+#### API-Equivalent Cost Today
 
-#### Cost per 1K Tokens
+API-equivalent cost of the last 24 hours alongside the 7-day rolling daily average. The percentage change compares today's 24-hour window to yesterday's. If today is well above your 7-day average and trending up, check whether a session is accumulating more context than usual.
 
-Effective cost per 1,000 tokens across all token types. Cache reads cost roughly 10% of input price, so a well-cached workflow will push this number well below the model's headline rate. Includes the 7-day average and percentage change. Rising cost-per-token despite stable usage typically means cache efficiency has dropped.
+#### API-Equivalent Subagent Cost (24h)
 
-#### Active Time (24h)
+API-equivalent cost attributed to spawned subagent tasks — parallel research, background code review, multi-agent work. Compare against Main Session Cost to understand what fraction of your usage is autonomous parallel work versus direct conversation. Includes the 7-day average and today-vs-yesterday change.
 
-Two values side by side: CLI time (how long Claude Code was running and processing) and User time (how long you were actively engaged — typing, reviewing). A high CLI-to-user ratio means Claude is doing a lot of autonomous work between your interactions.
+#### API-Equivalent Main Session Cost (24h)
 
-#### Token Distribution by Model (24h)
+API-equivalent cost from primary conversation turns: your prompts and Claude's direct responses. Excludes subagent and auxiliary tasks. Includes the 7-day average and percentage change.
 
-Pie chart showing the share of total tokens consumed by each model. Sonnet dominating is expected for most workloads. A large Opus slice is worth checking — Opus costs roughly 5x Sonnet per token, and many tasks don't require it.
+#### API-Equivalent Cost Forecast
+
+Daily and monthly projections of API-equivalent cost extrapolated from the current 6-hour burn rate. The 6-hour window smooths out short spikes — what you see reflects sustained activity. On a subscription plan a high projection is a value signal, not an upcoming bill.
+
+#### API-Equivalent Cost / Session
+
+Average API-equivalent cost per session over the last 24 hours compared to the 7-day average. A rising number over multiple days usually means sessions are running longer without being compacted — context accumulates and each turn costs more to process.
+
+#### API-Equivalent Cost per 1K Tokens
+
+Effective API-equivalent cost per 1,000 tokens across all token types. Cache reads cost roughly 10% of input price, so a well-cached workflow will push this number well below the model's headline rate. Includes the 7-day average and percentage change. Rising cost-per-token despite stable usage typically means cache efficiency has dropped.
+
+#### API-Equivalent Cost by Effort Level (24h)
+
+API-equivalent cost grouped by the effort setting (low / medium / high / max) over the last 24 hours. Effort controls the model's thinking-token budget. A large share at high or max effort is worth checking against whether those tasks actually needed deep reasoning.
+
+#### API-Equivalent Cache Savings (24h)
+
+Estimated API-equivalent dollars saved by prompt caching over the last 24 hours, versus the 7-day average. Computed as cacheRead tokens × the input-vs-cache price difference (Sonnet $2.70/1M, Haiku $0.72/1M). On a subscription plan this is an efficiency/value figure, not cash back.
+
+#### Peak Cost Hours (API-Equivalent)
+
+API-equivalent cost per hour as a bar chart. Spikes show which hours were most usage-intensive — cross-reference with sessions you remember running during those periods.
+
+#### Usage Anomaly Detection
+
+Hourly usage (measured via API-equivalent cost) expressed as percentage deviation from the 7-day historical average for the same hour. A value of 0% means today matches the historical average; 200% means it's three times higher. Excursions above 200% are flagged in red — investigate what was running during those periods. This is a relative usage signal, not a dollar amount owed.
 
 ---
 
-#### Session Volume
+### 🔢 Tokens & Usage
 
-#### Active Sessions (24h)
+#### Effective Tokens — All Models (24h)
 
-Number of Claude Code sessions started in the last 24 hours, alongside the 7-day daily average and today-vs-yesterday change.
+Actual effective (non-cacheRead) tokens consumed across all models in the last 24 hours, with a 7-day sparkline trend. These are the tokens that count toward Anthropic's usage limits — cacheRead tokens are excluded because they don't count the same way. This is a real measured volume, **not** a percentage of any limit: OTel telemetry can't reconstruct your quota gauge because the weekly reset boundary isn't exported. For true remaining quota, run `/usage` in the Claude Code CLI.
 
-#### Average Session Metrics
+#### Effective Tokens — Sonnet Only (24h)
 
-Three horizontal bars showing per-session averages across the last 24 hours: cost ($), total token count, and active CLI time. Rising values across multiple days point to sessions accumulating context without being reset. A useful complement to Average Cost / Session — if cost is rising but token count is flat, a more expensive model is being used more often.
-
-#### Lines of Code Modified
-
-Lines added and deleted today alongside 7-day rolling daily averages for each. A large gap between today and the 7-day average indicates an unusually active or unusually quiet day.
-
----
-
-#### Cache and Token Health
-
-#### Cache Hit Rate %
-
-Percentage of input-side tokens served from Anthropic's prompt cache. Above 80% is healthy. Below 60% suggests sessions may be too short to warm the cache effectively, or context structure is preventing cache blocks from being reused. Gauge arc turns red below 60%, yellow up to 80%, green above.
+The same effective-token measure scoped to Sonnet, which has its own separate usage cap at Anthropic. A 7-day sparkline shows the trend.
 
 #### Total Tokens Today
 
 All tokens consumed in the last 24 hours across all types, alongside the 7-day daily average.
 
-#### Model Token Efficiency (tokens/$)
-
-Total tokens per dollar spent, broken down by model, over the selected time range. Higher is more efficient. Haiku should significantly outperform Opus given the price difference. If the gap is narrower than expected, check whether model selection is being overridden somewhere.
-
-#### Tool Usage Breakdown
-
-Donut chart of tool calls by type over the selected time range, sourced from structured logs. Covers all tools: Bash, Read, Edit, Write, Glob, Grep, and others. Heavy Bash usage points to shell-and-test work; heavy Edit/Write usage is more code generation.
-
----
-
-#### Trends and History
-
-#### Peak Cost Hours
-
-API spend per hour as a bar chart. Spikes show which hours were most expensive — cross-reference with sessions you remember running during those periods.
-
 #### Weekly Total Token Usage
 
 Total tokens consumed over the last 7 days with a sparkline showing the daily trend. A consistently rising slope means usage is accelerating.
-
-#### Cost Anomaly Detection
-
-Hourly spend expressed as percentage deviation from the 7-day historical average for the same hour. A value of 0% means today's spend exactly matches the historical average; 200% means it's three times higher. Excursions above 200% are flagged in red — investigate what was running during those periods.
-
-#### Prompts Per Hour
-
-Count of user prompt events over a rolling 1-hour window, sourced from structured logs. Peaks show concentrated interaction periods; flat sections are idle time.
-
-#### Tool Decision Sources (24h)
-
-Donut chart showing how tool executions were authorized: via CLAUDE.md or settings (`config`), approved once for the session (`user temporary`), or added to the permanent allow list (`user permanent`). A high `user temporary` fraction means you're approving many tools interactively that could be moved to config.
-
----
-
-#### Rates and Distributions
-
-#### Code Modification Velocity (lines/min)
-
-Lines added and removed per minute as a timeseries. Green is additions, red is removals. Spikes indicate concentrated editing bursts. A sustained high removal rate relative to additions typically means refactoring or large-scale cleanup.
 
 #### Token Usage Rate (24h)
 
 Total tokens consumed per minute. The legend table shows mean, last, and peak rates for the selected window. Use this to gauge proximity to your plan's TPM rate limit — if the rate is approaching your ceiling, starting a fresh session or running `/compact` is the right move.
 
+#### Effective Tokens by Source
+
+Hourly effective (non-cacheRead) tokens stacked by query source: `main` (direct conversation turns), `auxiliary` (background context builds), and `subagent` (parallel spawned agents). A rising subagent share means Claude is doing more autonomous orchestration relative to interactive work.
+
+#### Token Distribution by Model (24h)
+
+Pie chart showing the share of total tokens consumed by each model. Sonnet dominating is expected for most workloads. A large Opus slice is worth checking — Opus costs roughly 5x Sonnet per token, and many tasks don't require it.
+
+#### Cache Hit Rate %
+
+Percentage of input-side tokens served from Anthropic's prompt cache. Above 80% is healthy. Below 60% suggests sessions may be too short to warm the cache effectively, or context structure is preventing cache blocks from being reused. Gauge arc turns red below 60%, yellow up to 80%, green above.
+
+---
+
+### 🚀 Productivity & Output
+
+#### Code Edit Acceptance Rate %
+
+Percentage of Claude's proposed file edits that were accepted in the last 24 hours, plus the 7-day average. Below 80% is worth investigating — the most common causes are context drift mid-session, an ambiguous task description, or Claude losing track of the codebase structure. Background turns red below 60%, yellow up to 80%, green above. Shows "No edits" if no edit activity occurred in the window.
+
+#### Active Time (24h)
+
+Two values side by side: CLI time (how long Claude Code was running and processing) and User time (how long you were actively engaged — typing, reviewing). A high CLI-to-user ratio means Claude is doing a lot of autonomous work between your interactions.
+
+#### Active Sessions (24h)
+
+Number of Claude Code sessions started in the last 24 hours, alongside the 7-day daily average and today-vs-yesterday change.
+
+#### Lines of Code Modified
+
+Lines added and deleted today alongside 7-day rolling daily averages for each. A large gap between today and the 7-day average indicates an unusually active or unusually quiet day.
+
+#### Average Session Metrics
+
+Three horizontal bars showing per-session averages across the last 24 hours: API-equivalent cost ($), total token count, and active CLI time. Rising values across multiple days point to sessions accumulating context without being reset. A useful complement to API-Equivalent Cost / Session — if cost is rising but token count is flat, a more expensive model is being used more often.
+
+#### Code Modification Velocity (lines/min)
+
+Lines added and removed per minute as a timeseries. Green is additions, red is removals. Spikes indicate concentrated editing bursts. A sustained high removal rate relative to additions typically means refactoring or large-scale cleanup.
+
+#### Commits (24h)
+
+Git commits made via Claude Code in the last 24 hours, compared to the 7-day daily average. Pairs with the lines-of-code panels to show shipped output, not just edit volume.
+
+#### Model Token Efficiency (tokens/$)
+
+Total tokens per API-equivalent dollar, broken down by model, over the selected time range. Higher is more efficient. Haiku should significantly outperform Opus given the price difference. If the gap is narrower than expected, check whether model selection is being overridden somewhere.
+
+---
+
+### 🛠️ Tools, MCP & Skills
+
+#### Tool Usage Breakdown
+
+Donut chart of tool calls by type over the selected time range, sourced from structured logs. Covers all tools: Bash, Read, Edit, Write, Glob, Grep, and others. Heavy Bash usage points to shell-and-test work; heavy Edit/Write usage is more code generation.
+
+#### Tool Decision Sources (24h)
+
+Donut chart showing how tool executions were authorized: via CLAUDE.md or settings (`config`), approved once for the session (`user temporary`), or added to the permanent allow list (`user permanent`). A high `user temporary` fraction means you're approving many tools interactively that could be moved to config.
+
+#### MCP Server Token Attribution (24h)
+
+Donut chart of token consumption attributed to MCP server calls over the last 24 hours. Only turns that invoked an MCP tool carry the server-name label, so this shows which MCP integrations are driving context size. User-configured (non-registry) servers appear as `custom`.
+
+#### Top Skills by API-Equivalent Cost (24h)
+
+Horizontal bars ranking named skills by the API-equivalent cost of the turns where they were active, over the last 24 hours. Turns without an active skill are excluded. High-cost skills often have large context windows or expensive prompt templates worth reviewing. (Third-party plugin skill names are redacted to `third-party` by Claude Code.)
+
+#### Top Skills by Effective Tokens (24h)
+
+The same skill ranking by effective (non-cacheRead) token volume. A skill high in tokens here but low in the cost panel is getting strong cache reuse; a skill high in both is a genuine cost driver.
+
+#### Prompts Per Hour
+
+Count of user prompt events over a rolling 1-hour window, sourced from structured logs. Peaks show concentrated interaction periods; flat sections are idle time.
+
 #### Prompt Length Distribution (chars)
 
 Character count distribution across five buckets: under 100, 100–499, 500–999, 1k–4.9k, and 5k+, sourced from structured logs. Most prompts are short. Long prompts (1k+) usually indicate pasted code, error output, or a detailed task description. A spike in the 5k+ bucket during a session that went expensive is often the explanation.
+
+---
+
+### ⚡ Performance
+
+#### Response Latency p95 by Model
+
+95th percentile response time per request, broken down by model, over the selected range — sourced from structured request logs. This is how long Anthropic's servers take to respond, a real performance signal for everyone regardless of plan or billing. Higher Sonnet latency vs Haiku reflects longer reasoning chains; sustained spikes above baseline signal context-window pressure or server backpressure. Bars turn yellow at 30s, red at 60s.
+
+#### Request Errors (24h)
+
+Count of failed requests in the last 24 hours — rate-limit rejections, network errors, and model errors returned by Anthropic's servers. Applies to all users regardless of plan. Green at zero; any errors turn the panel yellow, 5+ turns it red. Drill into the Logs dashboard for detail.
 
 ---
 
