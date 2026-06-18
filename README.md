@@ -139,7 +139,9 @@ If panels stay empty after several minutes, see [Troubleshooting](#troubleshooti
 
 ## Configuring Codex
 
-The stack also ships a **Codex** dashboard. [OpenAI Codex](https://openai.com/codex/) has built-in OpenTelemetry support and exports structured log events for conversations, prompts, model turns (with token counts), tool calls, and decisions. Pointing Codex at the same OTel Collector makes its data appear in the Codex dashboard. This works for both the **Codex CLI** and the **Codex desktop app** — they share the same `config.toml` and emit the same events (under service names `codex_exec` and `codex-app-server` respectively).
+The stack also ships a **Codex** dashboard. [OpenAI Codex](https://openai.com/codex/) has built-in OpenTelemetry support and exports structured log events for conversations, prompts, model turns (with token counts), tool calls, and decisions. Pointing Codex at the same OTel Collector makes its data appear in the Codex dashboard. This works for both the **Codex CLI** and the **Codex desktop app**, which share the same `config.toml` (service names `codex_exec` and `codex-app-server` respectively).
+
+The two surfaces emit *mostly* the same events, with one confirmed difference: **time-to-first-token (`codex.turn_ttft`) is emitted only by the desktop app, not the CLI.** So the TTFT / response-latency panels populate only when you use the desktop app — CLI-only usage will leave those specific panels empty while everything else (conversations, tokens, tools, decisions) still fills in.
 
 ### Settings
 
@@ -163,7 +165,9 @@ protocol = "binary"
 
 The Codex dashboard is log-sourced only — Codex's telemetry carries token counts and latency but no per-request dollar cost, so the dashboard tracks **usage and performance**, not spend. If you also want Codex's traces/metrics elsewhere, configure `[otel.trace_exporter.otlp-http]` / `[otel.metrics_exporter.otlp-http]` separately; the Grafana dashboard only needs the logs exporter above.
 
-After saving, restart Codex (fully quit the desktop app, or start a new CLI session) so it re-reads the config.
+After saving, restart Codex so it re-reads the config. For the **CLI**, just start a new `codex` session.
+
+For the **desktop app**, be aware that **closing the window is not enough** — the desktop keeps background processes running that hold the old telemetry config in memory, so it will keep exporting to the previous endpoint until those are killed. Fully exit the app (end every `Codex` / `codex` process — check Task Manager on Windows, since closing the window leaves the app server running) and relaunch it. If the desktop app's data isn't appearing after a config change, a lingering background process is almost always the reason.
 
 ### Verifying it's working
 
