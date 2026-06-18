@@ -1,32 +1,49 @@
-![Claude Code observability dashboard — full view across all five sections](docs/img/dashboard-full.png)
-
-
 # agent-observability
 
-A self-hosted monitoring stack for [Claude Code](https://claude.ai/code) **and [OpenAI Codex](https://openai.com/codex/)**. All telemetry stays in your own environment — nothing is sent to Anthropic, OpenAI, or any third-party service. Both tools already emit OpenTelemetry data throughout their operation — covering model requests, tool executions, prompts, edits, and session activity; this stack collects it, stores it, and surfaces it as Grafana dashboards.
+A self-hosted observability stack for AI coding agents. It collects the OpenTelemetry data that [Claude Code](https://claude.ai/code) and [OpenAI Codex](https://openai.com/codex/) already emit — model requests, tool executions, prompts, edits, tokens, and session activity — stores it locally, and surfaces it as ready-made Grafana dashboards. **Everything stays in your own environment; nothing is sent to Anthropic, OpenAI, or any third party.**
+
+The repo contains everything needed to stand the stack up: the OpenTelemetry Collector, Prometheus, Loki, and Grafana configs, deployment manifests for Docker Compose / Kubernetes / Helm, and pre-built dashboards for each supported agent. Point an agent's OTel exporter at the collector and its dashboard fills in.
 
 **Stack:** OpenTelemetry Collector → Prometheus (metrics) + Loki (logs) → Grafana
 
-Two agent dashboards ship with the stack: **Claude Code** (cost, tokens, cache, productivity) and **Codex** (sessions, tokens, latency, tools — log-sourced from Codex's OTel export, covering both the Codex CLI and the desktop app).
+**Supported agents and dashboards:**
 
-> ### 💵 A note on the cost figures
-> Every dollar amount on the dashboard is **API-equivalent cost** — what your usage *would* cost at [pay-as-you-go API list prices](https://platform.claude.com/docs/en/about-claude/pricing) if you had no subscription. **It is not a bill.** Claude Code computes this estimate on every request (the metric is literally documented as *"cost_usd: Estimated cost in USD"*) regardless of how you're billed. If you're on a **Pro / Max / Team** plan you pay a flat monthly fee and are **not** charged these amounts — a high number means you're extracting strong value from your plan. Only metered **API / Console** users actually pay per token. The dashboard makes this explicit with a banner and panel labels so the numbers are never mistaken for money owed.
+| Agent | Dashboard(s) | Data |
+|-------|-------------|------|
+| **Claude Code** | `Claude Code` + `Claude Code — Logs` | Cost (API-equivalent), tokens, cache, productivity, tools/skills/MCP, performance |
+| **OpenAI Codex** | `Codex` + `Codex — Logs` | Sessions, tokens, latency, tools & decisions — covering both the Codex CLI and the desktop app |
+
+![The Claude Code dashboard — one of the agent dashboards that ship with the stack](docs/img/dashboard-full.png)
+
+*Above: the Claude Code dashboard. See the [Dashboard reference](#dashboard-reference) for the full Claude Code and Codex dashboards.*
+
+> ### 💵 A note on the cost figures (Claude Code)
+> Every dollar amount on the **Claude Code** dashboard is **API-equivalent cost** — what your usage *would* cost at [pay-as-you-go API list prices](https://platform.claude.com/docs/en/about-claude/pricing) if you had no subscription. **It is not a bill.** Claude Code computes this estimate on every request (the metric is literally documented as *"cost_usd: Estimated cost in USD"*) regardless of how you're billed. If you're on a **Pro / Max / Team** plan you pay a flat monthly fee and are **not** charged these amounts — a high number means you're extracting strong value from your plan. Only metered **API / Console** users actually pay per token. The dashboard makes this explicit with a banner and panel labels so the numbers are never mistaken for money owed. (Codex telemetry carries no cost data, so the Codex dashboard tracks usage and performance, not spend.)
 
 ## What you get
 
-- Real-time **API-equivalent** cost burn rate with trend comparison against yesterday and your 7-day average
-- Subagent vs. main session cost breakdown — how much of your usage is autonomous work vs. direct conversation
-- Daily and monthly cost projections, plus anomaly detection when an hour's usage deviates from your historical baseline
-- Cache hit rate, cache-savings estimate, and cost per 1K tokens — whether your workflow is getting value from prompt caching
-- Per-model token efficiency — tokens per dollar across Haiku, Sonnet, and Opus
-- Effective (non-cached) token volume, broken out by source and by model
-- Cost and token attribution by **skill**, **MCP server**, and **effort level**
-- Lines of code added and removed, commits, edit acceptance rate, and modification velocity
-- Tool call breakdown by type — Bash, Read, Edit, Write, and others — plus how each execution was authorized
-- Prompt length and frequency patterns
-- Response latency (p95) and request error counts
-- Active CLI time vs. your active time, broken down by session
-- Raw filterable log stream with session drill-down and full structured payloads
+**Across both agents:**
+
+- Token usage broken out by type, source, and model, with rate and trend over time
+- Tool-call breakdown by type, plus how each execution was authorized (decisions / approval source)
+- MCP server attribution, prompt frequency, and session/conversation activity
+- Response latency (p95) and error/failure counts
+- Raw filterable log stream per agent, with session drill-down and full structured payloads
+- Every panel respects the dashboard time picker (with a few intentional fixed-window panels)
+
+**Claude Code specifically:**
+
+- Real-time **API-equivalent** cost burn rate, daily/monthly projections, and hourly anomaly detection
+- Subagent vs. main-session cost split, cache hit rate, cache-savings estimate, and cost per 1K tokens
+- Per-model token efficiency (tokens per dollar across Haiku, Sonnet, Opus), and cost/token attribution by **skill**, **MCP server**, and **effort level**
+- Lines of code added/removed, commits, edit-acceptance rate, and modification velocity
+
+**Codex specifically:**
+
+- Conversation, turn, and prompt activity across the Codex CLI and desktop app
+- Input/output/cached/reasoning token breakdown, and tokens by surface
+- WebSocket/SSE turn latency, transport errors, and tool success rate
+- Code-activity proxies (git commands, commits, file edits) derived from Codex's shell command stream, since Codex emits no native git telemetry
 
 ## Deployment options
 
