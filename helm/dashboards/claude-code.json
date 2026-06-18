@@ -101,7 +101,7 @@
       "gridPos": {
         "x": 0,
         "y": 4,
-        "w": 5,
+        "w": 6,
         "h": 4
       },
       "datasource": {
@@ -169,9 +169,9 @@
       "title": "API-Equivalent Cost Today",
       "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. What the last 24 hours of usage would cost at pay-as-you-go API list prices if you had no subscription. On a Pro/Max/Team plan you pay a flat monthly fee, not this amount. Shown alongside the 7-day rolling daily average to see if today is above or below baseline.",
       "gridPos": {
-        "x": 5,
+        "x": 6,
         "y": 4,
-        "w": 5,
+        "w": 6,
         "h": 4
       },
       "datasource": {
@@ -248,9 +248,9 @@
       "title": "API-Equivalent Subagent Cost (24h)",
       "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. The pay-as-you-go API list price of subagent tasks — parallel research, code review, and background work — over the last 24 hours. On a subscription plan you are not charged this. High subagent cost relative to main session cost means Claude is spawning many parallel workers.",
       "gridPos": {
-        "x": 10,
+        "x": 12,
         "y": 4,
-        "w": 5,
+        "w": 6,
         "h": 4
       },
       "datasource": {
@@ -319,9 +319,9 @@
       "title": "API-Equivalent Main Session Cost (24h)",
       "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. The pay-as-you-go API list price of main conversation turns (your prompts and Claude's responses, excluding subagent and auxiliary tasks) over the last 24 hours. On a subscription plan you pay a flat fee, not this amount.",
       "gridPos": {
-        "x": 15,
+        "x": 18,
         "y": 4,
-        "w": 5,
+        "w": 6,
         "h": 4
       },
       "datasource": {
@@ -1095,7 +1095,7 @@
       "gridPos": {
         "x": 0,
         "y": 24,
-        "w": 6,
+        "w": 12,
         "h": 5
       },
       "datasource": {
@@ -1164,9 +1164,9 @@
       "title": "Weekly Total Token Usage",
       "description": "Total tokens consumed in the last 7 days. The sparkline shows the daily trend — a rising slope means usage is accelerating week over week.",
       "gridPos": {
-        "x": 6,
+        "x": 12,
         "y": 24,
-        "w": 6,
+        "w": 12,
         "h": 5
       },
       "datasource": {
@@ -1225,10 +1225,10 @@
       "title": "Token Usage Rate (24h)",
       "description": "Tokens consumed per minute across all types. The legend table shows mean, last, and peak rates for the selected window. A sustained high rate approaching your plan's TPM ceiling is the signal to start a fresh session.",
       "gridPos": {
-        "x": 12,
-        "y": 24,
+        "x": 0,
+        "y": 29,
         "w": 12,
-        "h": 5
+        "h": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -1307,10 +1307,10 @@
       "title": "Effective Tokens by Source",
       "description": "Hourly effective (non-cacheRead) tokens stacked by query_source: main (direct conversation turns), auxiliary (background context builds), and subagent (parallel spawned agents). A rising subagent share means Claude is doing more autonomous orchestration relative to interactive work.",
       "gridPos": {
-        "x": 0,
+        "x": 12,
         "y": 29,
         "w": 12,
-        "h": 5
+        "h": 8
       },
       "datasource": {
         "type": "prometheus",
@@ -1384,9 +1384,9 @@
       "title": "Token Distribution by Model (24h)",
       "description": "Share of total tokens consumed by each model in the last 24 hours. Sonnet dominating is expected for most workloads. A large Opus slice warrants a check on whether those tasks needed Opus-level reasoning.",
       "gridPos": {
-        "x": 12,
-        "y": 29,
-        "w": 6,
+        "x": 0,
+        "y": 37,
+        "w": 12,
         "h": 8
       },
       "datasource": {
@@ -1443,9 +1443,9 @@
       "title": "Cache Hit Rate %",
       "description": "Percentage of input-side tokens served from Anthropic's prompt cache. Above 80% is healthy. Below 60% means cache is not being reused effectively — sessions may be too short or context structure is breaking cache blocks.",
       "gridPos": {
-        "x": 18,
-        "y": 29,
-        "w": 6,
+        "x": 12,
+        "y": 37,
+        "w": 12,
         "h": 8
       },
       "datasource": {
@@ -1514,7 +1514,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 37,
+        "y": 45,
         "w": 24,
         "h": 1
       },
@@ -1527,7 +1527,7 @@
       "description": "Percentage of Claude's proposed file edits that were accepted in the last 24 hours, plus the 7-day average. Below 80% suggests edits are frequently being rejected or need rework.",
       "gridPos": {
         "x": 0,
-        "y": 38,
+        "y": 46,
         "w": 6,
         "h": 4
       },
@@ -1607,7 +1607,7 @@
       "description": "CLI time is how long Claude Code was running and processing. User time is how long you were actively engaged. A high CLI-to-user ratio means Claude is doing a lot of autonomous work.",
       "gridPos": {
         "x": 6,
-        "y": 38,
+        "y": 46,
         "w": 6,
         "h": 4
       },
@@ -1711,7 +1711,7 @@
       "description": "Number of Claude Code sessions in the last 24 hours compared to the 7-day daily average.",
       "gridPos": {
         "x": 12,
-        "y": 38,
+        "y": 46,
         "w": 6,
         "h": 4
       },
@@ -1782,7 +1782,7 @@
       "description": "Lines added and removed in the last 24 hours alongside rolling 7-day daily averages. A large gap between Today and 7 Day Avg indicates an unusually active or quiet day.",
       "gridPos": {
         "x": 18,
-        "y": 38,
+        "y": 46,
         "w": 6,
         "h": 4
       },
@@ -1875,7 +1875,7 @@
       "description": "Per-session averages over the last 24 hours: cost in dollars, total tokens, and active CLI time. Rising cost or token averages over days indicate sessions are running longer without being compacted.",
       "gridPos": {
         "x": 0,
-        "y": 42,
+        "y": 50,
         "w": 12,
         "h": 5
       },
@@ -2038,7 +2038,7 @@
       "description": "Rate of lines added and removed per minute. Spikes indicate concentrated editing bursts. A high removed rate relative to added suggests refactoring or cleanup sessions.",
       "gridPos": {
         "x": 12,
-        "y": 42,
+        "y": 50,
         "w": 12,
         "h": 5
       },
@@ -2146,8 +2146,8 @@
       "description": "Git commits made via Claude Code in the last 24 hours versus the 7-day daily average. Pairs with the lines-of-code panels to show shipped output, not just edit volume.",
       "gridPos": {
         "x": 0,
-        "y": 47,
-        "w": 6,
+        "y": 55,
+        "w": 8,
         "h": 5
       },
       "datasource": {
@@ -2217,9 +2217,9 @@
       "title": "Model Token Efficiency (tokens/$)",
       "description": "Total tokens per dollar spent by model over the selected time range. Higher is more efficient. Haiku should significantly outperform Opus. If the gap is narrow, check whether model selection is being forced.",
       "gridPos": {
-        "x": 6,
-        "y": 47,
-        "w": 12,
+        "x": 8,
+        "y": 55,
+        "w": 16,
         "h": 5
       },
       "datasource": {
@@ -2281,7 +2281,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 52,
+        "y": 60,
         "w": 24,
         "h": 1
       },
@@ -2294,7 +2294,7 @@
       "description": "Share of tool calls by tool type over the selected time range, sourced from structured logs. Covers all tools — Bash, Read, Edit, Write, and others — not just file edits.",
       "gridPos": {
         "x": 0,
-        "y": 53,
+        "y": 61,
         "w": 8,
         "h": 8
       },
@@ -2352,7 +2352,7 @@
       "description": "How tool execution decisions were authorized over the last 24 hours. Config = approved via CLAUDE.md or settings. User temporary = approved once for the session. User permanent = added to always-allow list.",
       "gridPos": {
         "x": 8,
-        "y": 53,
+        "y": 61,
         "w": 8,
         "h": 8
       },
@@ -2410,7 +2410,7 @@
       "description": "Token consumption attributed to MCP server calls in the last 24 hours. Only turns that invoked an MCP tool carry the mcp_server_name label. Shows which MCP integrations (e.g. linear) are driving context size and cost.",
       "gridPos": {
         "x": 16,
-        "y": 53,
+        "y": 61,
         "w": 8,
         "h": 8
       },
@@ -2469,7 +2469,7 @@
       "description": "API-EQUIVALENT COST, NOT YOUR ACTUAL BILL. Pay-as-you-go API list price attributed to named skills in the last 24 hours; on a subscription plan you are not charged this. The skill_name label is set whenever Claude Code invokes a skill. Turns without a skill are excluded. High-cost skills often have large context windows or expensive prompt templates worth reviewing.",
       "gridPos": {
         "x": 0,
-        "y": 61,
+        "y": 69,
         "w": 12,
         "h": 6
       },
@@ -2533,7 +2533,7 @@
       "description": "Effective (non-cacheRead) token consumption per skill in the last 24 hours. A skill with high tokens here but low cost in the panel to the left is getting strong cache reuse. A skill high in both is a genuine cost driver.",
       "gridPos": {
         "x": 12,
-        "y": 61,
+        "y": 69,
         "w": 12,
         "h": 6
       },
@@ -2597,7 +2597,7 @@
       "description": "Count of user prompt events logged over a rolling 1-hour window, sourced from structured logs. Peaks show concentrated interaction periods; gaps are idle time between sessions.",
       "gridPos": {
         "x": 0,
-        "y": 67,
+        "y": 75,
         "w": 12,
         "h": 5
       },
@@ -2675,7 +2675,7 @@
       "description": "Distribution of prompt lengths by character count bucket over the selected time range, sourced from structured logs. Most prompts are short — long prompts (1k+ chars) typically mean pasted code or detailed task descriptions.",
       "gridPos": {
         "x": 12,
-        "y": 67,
+        "y": 75,
         "w": 12,
         "h": 5
       },
@@ -2773,7 +2773,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 72,
+        "y": 80,
         "w": 24,
         "h": 1
       },
@@ -2786,7 +2786,7 @@
       "description": "95th percentile API response duration by model over the selected range, from structured api_request logs. Higher Sonnet latency vs Haiku reflects longer reasoning chains. Sustained spikes above baseline signal context-window pressure or API backpressure. Yellow at 30s, red at 60s.",
       "gridPos": {
         "x": 0,
-        "y": 73,
+        "y": 81,
         "w": 12,
         "h": 5
       },
@@ -2858,7 +2858,7 @@
       "description": "Count of api_error events in the last 24 hours — API failures including rate-limit rejections, network errors, and model errors. Green at zero; any errors turn the panel yellow, 5+ turns it red. Drill into the Logs dashboard for detail.",
       "gridPos": {
         "x": 12,
-        "y": 73,
+        "y": 81,
         "w": 12,
         "h": 5
       },
