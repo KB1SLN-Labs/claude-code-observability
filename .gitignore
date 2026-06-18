@@ -10,3 +10,7 @@ helm/values.local.yaml
 
 # local editor config — personal, not project state
 *.code-workspace
+
+# personal Dynatrace working docs — not part of the public stack
+DYNATRACE_PORT_SPEC.md
+docs/DYNATRACE_*.md
