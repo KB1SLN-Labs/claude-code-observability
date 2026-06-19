@@ -99,20 +99,33 @@ OTel export is built into Claude Code with no plugins or extensions required. If
 
 ### Settings
 
-Claude Code's `settings.json` supports an `env` block that sets environment variables for the process at startup. Add the following two variables, replacing `<your-collector-host>` with the endpoint for your deployment:
+Claude Code's `settings.json` supports an `env` block that sets environment variables for the process at startup. Add the following, replacing `<your-collector-host>` with the endpoint for your deployment:
 
 ```json
 {
   "env": {
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<your-collector-host>:4318",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_TRACES_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<your-collector-host>:4318"
   }
 }
 ```
 
-**`OTEL_EXPORTER_OTLP_ENDPOINT`** — the base URL of the OTel Collector. Claude Code appends `/v1/metrics` and `/v1/logs` automatically. Use `http://localhost:4318` if the stack is on the same machine as Claude Code, or `http://<host>:4318` if it's running elsewhere.
+**`CLAUDE_CODE_ENABLE_TELEMETRY`** — the master switch; telemetry is off until this is `"1"`.
+
+**`OTEL_METRICS_EXPORTER` / `OTEL_LOGS_EXPORTER` / `OTEL_TRACES_EXPORTER`** — turn on each signal. Metrics drive most dashboard panels and logs drive the tool/prompt/error panels and the Logs dashboard, so both are needed for the full dashboard. **Traces** are optional — they feed the trace-derived latency panels (and Grafana's Tempo explorer); leave `OTEL_TRACES_EXPORTER` out if you don't want them.
+
+**`CLAUDE_CODE_ENHANCED_TELEMETRY_BETA`** — required to enable traces (tracing is gated behind this beta flag). Omit it if you're not exporting traces.
+
+**`OTEL_EXPORTER_OTLP_ENDPOINT`** — the base URL of the OTel Collector. Claude Code appends `/v1/metrics`, `/v1/logs`, and `/v1/traces` automatically. Use `http://localhost:4318` if the stack is on the same machine as Claude Code, or `http://<host>:4318` if it's running elsewhere.
 
 **`OTEL_EXPORTER_OTLP_PROTOCOL`** — must be `http/protobuf`. The gRPC protocol is also supported by the collector on port 4317 but is not needed for most setups.
+
+> Optional: add `"OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE": "cumulative"` to keep metric counters cumulative (the form Prometheus expects). Claude Code's default already works with the collector, but setting it explicitly avoids any ambiguity if you also fan out to a delta-based backend.
 
 ### Where is settings.json?
 
@@ -127,17 +140,22 @@ If the file doesn't exist yet, create it with the `env` block above. If it alrea
 {
   "theme": "dark",
   "env": {
-    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<your-collector-host>:4318",
-    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf"
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "CLAUDE_CODE_ENHANCED_TELEMETRY_BETA": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_TRACES_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://<your-collector-host>:4318"
   }
 }
 ```
 
-After saving, restart Claude Code. New sessions will begin exporting telemetry immediately; any sessions that were open when you saved need to be closed and reopened.
+After saving, restart Claude Code. New sessions will begin exporting telemetry immediately; any sessions that were open when you saved need to be closed and reopened. (Like the Codex desktop app, an already-running Claude session keeps its old telemetry config until restarted.)
 
 ### Verifying it's working
 
-Open Grafana and check the main dashboard. Within a few minutes of running Claude Code you should see non-zero values in **API-Equivalent Cost Today**, **Total Tokens Today**, and **Active Sessions (24h)**. The **Log Stream** on the Logs dashboard should show entries as well.
+Open Grafana and check the main dashboard. Within a few minutes of running Claude Code you should see non-zero values in **API-Equivalent Cost**, **Total Tokens**, and **Active Sessions**. The **Log Stream** on the Logs dashboard should show entries as well. If you enabled traces, **Explore → Tempo** will show Claude Code traces after a turn or two.
 
 If panels stay empty after several minutes, see [Troubleshooting](#troubleshooting).
 
