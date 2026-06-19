@@ -447,12 +447,9 @@ kubectl delete pvc -n claude-code-observability --all
 
 ## Upgrading an existing deployment
 
-If you already have the stack running from an earlier version, this section gets the new dashboard (five sections, API-equivalent cost labeling, plan-usage token panels, skill/MCP/effort attribution, latency and error panels) onto your running install. **No data is lost** — the dashboard is provisioned from config; your metrics and logs in Prometheus and Loki are untouched.
+If you already have the stack running from an earlier version, this section gets the latest onto your running install. **No data is lost** — Prometheus, Loki, and Tempo retain their existing data across the upgrade.
 
-The only files that changed for the dashboard update are the two dashboard JSONs:
-
-- `grafana/dashboards/claude-code.json` (used by Docker Compose and Kubernetes)
-- `helm/dashboards/claude-code.json` (used by Helm — identical content)
+Recent versions changed more than dashboards — there is now a **new Tempo service** (the traces backend) plus collector and Grafana datasource changes — so an upgrade is a full re-apply, not just a dashboard swap. The safe path is the same `git pull` + redeploy your method already uses, which creates the Tempo service and updates the collector/Grafana config.
 
 **1. Pull the latest repo in all cases:**
 
@@ -465,46 +462,52 @@ Then follow the steps for your deployment method.
 
 ### Docker Compose
 
-The dashboard JSON is mounted into the Grafana container and reloaded by Grafana's provisioner automatically (within ~30s). After `git pull`, restart Grafana so it re-reads the mounted file:
+`up -d` creates the new Tempo service and applies the updated collector and Grafana config. Dashboards reload automatically (~30s). The `--force-recreate` ensures the collector and Grafana pick up their config changes:
 
 ```bash
-docker compose up -d --force-recreate grafana
+docker compose up -d --force-recreate
 ```
 
 If you don't see the new panels after a minute, hard-refresh the browser (Grafana caches dashboards client-side).
 
 ### Kubernetes (Kustomize)
 
-The dashboard is delivered as a ConfigMap generated from the JSON files. Re-apply to regenerate it, then restart Grafana to pick up the new ConfigMap content:
+Re-apply to create the Tempo service and update the dashboard/collector/datasource ConfigMaps, then restart the collector and Grafana so they load their new config:
 
 ```bash
 kubectl apply -k k8s/
-kubectl rollout restart deployment grafana -n claude-code-observability
+kubectl rollout restart deployment otel-collector grafana -n claude-code-observability
 ```
 
-> **Note:** a Grafana pod that has been running since before the ConfigMap changed will not always hot-reload a mounted ConfigMap reliably. The `rollout restart` above guarantees the new dashboard is mounted. Your PersistentVolumeClaims (metrics/logs) are not affected by the restart.
+> **Note:** a pod that has been running since before its ConfigMap changed will not always hot-reload it reliably. The `rollout restart` guarantees the collector and Grafana load the new config. PersistentVolumeClaims (metrics / logs / traces) are not affected by the restart.
 
 ### Helm
 
 ```bash
 helm upgrade --install claude-code ./helm --namespace claude-code-observability
-kubectl rollout restart deployment claude-code-grafana -n claude-code-observability
+kubectl rollout restart deployment claude-code-otel-collector claude-code-grafana -n claude-code-observability
 ```
 
-`upgrade --install` re-renders the dashboard ConfigMap from `helm/dashboards/claude-code.json`. The `rollout restart` ensures the running Grafana pod mounts the updated content. PVCs and stored data are preserved.
+`upgrade --install` deploys the Tempo service and re-renders the collector, datasource, and dashboard ConfigMaps. The `rollout restart` ensures the running pods load the updated config. PVCs and stored data are preserved.
 
 ### Verifying the upgrade
 
-Open the main dashboard. You should see five section headers — **💵 Cost — API-Equivalent**, **🔢 Tokens & Usage**, **🚀 Productivity & Output**, **🛠️ Tools, MCP & Skills**, **⚡ Performance** — and a banner at the top explaining the cost figures. If you still see the old flat layout, hard-refresh the browser and confirm the Grafana pod/container was restarted.
+- Both agent dashboards exist: **Claude Code** (+ Logs) and **Codex** (+ Logs), cross-linked via the header links.
+- Grafana has three datasources: **Prometheus**, **Loki**, and **Tempo** (Connections → Data sources).
+- The Claude Code dashboard shows five sections under a banner explaining the API-equivalent cost figures.
+- Traces are arriving: open **Explore → Tempo** and search — once an agent has run, you should see traces. (If empty, confirm the agent's trace exporter points at the collector and the collector/Grafana pods were restarted.)
 
-### What changed in this version
+### What changed (recent versions)
 
-- **Cost panels relabeled as "API-equivalent."** The dollar figures were always estimated API list prices, not actual subscription charges — the labels and a new banner now make this explicit so the numbers aren't mistaken for a bill.
-- **New plan-usage token panels.** *Effective Tokens — All Models / Sonnet Only* show real (non-cached) token volume, the tokens that count toward Anthropic's limits. (An earlier draft tried to show these as a percentage-of-limit gauge, but OTel can't reconstruct the quota reset, so they report honest volume instead — use `/usage` in the CLI for true remaining quota.)
-- **New attribution panels.** Cost and tokens broken down by **skill**, **MCP server**, and **effort level**.
-- **New output and performance panels.** **Commits**, **Response Latency p95 by Model**, and **Request Errors**.
-- **Reorganized into five labeled sections** with no dead space.
-- No changes to the OTel Collector, Prometheus, or Loki configuration — telemetry collection is unchanged, so no Claude Code reconfiguration is needed.
+- **Renamed** the project from `claude-code-observability` to **`agent-observability`** — it now monitors more than Claude Code. (GitHub auto-redirects the old repo URL; update your `git remote` when convenient.)
+- **Added a Codex dashboard** (and **Codex — Logs**) for OpenAI Codex, covering both the CLI and the desktop app: sessions, tokens, latency, tools, decisions, MCP attribution, and code-activity proxies. Structured to mirror the Claude Code dashboard for easy switching.
+- **Added Tempo as the traces backend** — completing the metrics + logs + **traces** pipeline. Both agents emit all three OTel signals; the collector now routes traces to Tempo (which also derives latency span metrics into Prometheus). Tempo ships in all three deployment paths.
+- **Codex trace-latency panels** — operation-level p95/avg latency, call rate, and end-to-end turn duration, derived from trace span metrics.
+- **Cost panels relabeled "API-equivalent"** with a banner, so the dollar figures (estimated API list prices, not your actual subscription bill) aren't mistaken for money owed.
+- **Honest token-volume panels** replaced an earlier broken "% of plan limit" gauge (OTel can't reconstruct the quota reset — use `/usage` in the CLI for true remaining quota).
+- **More attribution and output panels** — cost/tokens by **skill**, **MCP server**, and **effort level**; **commits**, response **latency p95**, and **request/transport errors**.
+- **Reorganized** the Claude Code dashboard into five labeled sections; **every panel now respects the time picker** (a couple of intentional fixed-window panels aside).
+- **Configuration change for Codex users:** to capture all three signals, point Codex's logs, metrics, and traces exporters at the collector (see [Configuring Codex](#configuring-codex)). Claude Code needs no change.
 
 ---
 
