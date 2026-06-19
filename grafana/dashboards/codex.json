@@ -2792,7 +2792,7 @@
           },
           "refId": "A",
           "legendFormat": "turn duration (avg)",
-          "expr": "sum(rate(traces_spanmetrics_latency_sum{service=~\"codex.*\",span_name=\"run_turn\"}[$__rate_interval])) / sum(rate(traces_spanmetrics_latency_count{service=~\"codex.*\",span_name=\"run_turn\"}[$__rate_interval])) * 1000"
+          "expr": "sum(rate(traces_spanmetrics_latency_sum{service=~\"codex.*\",span_name=\"run_turn\"}[$__rate_interval])) / (sum(rate(traces_spanmetrics_latency_count{service=~\"codex.*\",span_name=\"run_turn\"}[$__rate_interval])) > 0) * 1000"
         }
       ]
     },
