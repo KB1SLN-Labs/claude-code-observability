@@ -3163,7 +3163,7 @@
             "uid": "${loki_datasource}"
           },
           "refId": "A",
-          "instant": true,
+          "instant": false,
           "expr": "sum by(attributes_originator)(count_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.conversation_starts\" [$__range]))",
           "legendFormat": "{{attributes_originator}}"
         }
@@ -3212,10 +3212,26 @@
         "overrides": [
           {
             "matcher": {
-              "id": "byName",
-              "options": "Conversations w/ Tools"
+              "id": "byFrameRefId",
+              "options": "A"
             },
             "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg Tool Calls / Conversation"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefId",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Conversations w/ Tools"
+              },
               {
                 "id": "decimals",
                 "value": 0
