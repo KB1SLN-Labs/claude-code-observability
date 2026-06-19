@@ -24,6 +24,11 @@ metadata:
     {{- include "claude-code-observability.labels" . | nindent 4 }}
 spec:
   replicas: 1
+  # Recreate (not RollingUpdate): the data PVC is ReadWriteOnce and the TSDB
+  # holds a single-writer lock, so a surging new pod would crash on the lock
+  # held by the old one. Terminate old before starting new.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ .Release.Name }}-prometheus

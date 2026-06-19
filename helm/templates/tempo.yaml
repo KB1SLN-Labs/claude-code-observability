@@ -83,6 +83,10 @@ metadata:
     {{- include "claude-code-observability.labels" . | nindent 4 }}
 spec:
   replicas: 1
+  # Recreate (not RollingUpdate): single-writer ReadWriteOnce data PVC —
+  # a surging new pod would conflict with the old one on the volume.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: {{ .Release.Name }}-tempo
