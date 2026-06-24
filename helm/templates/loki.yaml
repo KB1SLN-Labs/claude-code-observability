@@ -24,6 +24,15 @@ data:
         kvstore:
           store: inmemory
 
+    ingester:
+      wal:
+        # Flush chunks to storage on graceful shutdown so a restart doesn't
+        # leave the on-disk index inconsistent / lose unflushed chunks.
+        flush_on_shutdown: true
+        # Keep WAL replay memory under the pod memory limit (1Gi) so replay
+        # can't OOMKill the pod (default ceiling is 4GB).
+        replay_memory_ceiling: 512MB
+
     schema_config:
       configs:
         - from: 2020-10-24
@@ -80,6 +89,12 @@ spec:
         fsGroup: 10001
         runAsUser: 10001
         runAsGroup: 10001
+      {{- with .Values.loki.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # Allow time on SIGTERM for the ingester to flush before SIGKILL.
+      terminationGracePeriodSeconds: 120
       containers:
         - name: loki
           image: {{ .Values.loki.image }}

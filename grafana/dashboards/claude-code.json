@@ -116,8 +116,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -165,10 +165,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(rate(claude_code_cost_usage_USD_total[30m])) * 3600",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [30m])) * 2",
           "legendFormat": "$/hr",
           "refId": "A"
         }
@@ -186,8 +186,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -235,19 +235,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [$__range]))",
           "legendFormat": "Cost Today",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total[24h])))[7d:24h])",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [7d])) / 7",
           "legendFormat": "7 Day Avg",
           "refId": "B"
         }
@@ -265,8 +265,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -306,19 +306,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{query_source=\"subagent\"}[$__range]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_query_source=~\"agent:.*\" | unwrap attributes_cost_usd [$__range]))",
           "legendFormat": "Subagent Cost",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total{query_source=\"subagent\"}[24h])))[7d:24h])",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_query_source=~\"agent:.*\" | unwrap attributes_cost_usd [7d])) / 7",
           "legendFormat": "7 Day Avg",
           "refId": "B"
         }
@@ -336,8 +336,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -385,19 +385,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{query_source=\"main\"}[$__range]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_query_source=\"sdk\" | unwrap attributes_cost_usd [$__range]))",
           "legendFormat": "Session Cost",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total{query_source=\"main\"}[24h])))[7d:24h])",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_query_source=\"sdk\" | unwrap attributes_cost_usd [7d])) / 7",
           "legendFormat": "7 Day Avg",
           "refId": "B"
         }
@@ -415,8 +415,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -455,19 +455,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(rate(claude_code_cost_usage_USD_total[6h])) * 3600 * 24",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [6h])) / 6 * 24",
           "legendFormat": "Daily Projection",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(rate(claude_code_cost_usage_USD_total[6h])) * 3600 * 24 * 30",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [6h])) / 6 * 24 * 30",
           "legendFormat": "Monthly Projection",
           "refId": "B"
         }
@@ -485,8 +485,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -534,19 +534,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [$__range])) / count(sum by (attributes_session_id)(count_over_time({job=\"claude-code\"} |= \"api_request\" | json [$__range])))",
           "legendFormat": "Avg Session Cost",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_session_count_total[24h])), 1))[7d:24h])",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [7d])) / count(sum by (attributes_session_id)(count_over_time({job=\"claude-code\"} |= \"api_request\" | json [7d])))",
           "legendFormat": "7 Day Average",
           "refId": "B"
         }
@@ -564,8 +564,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -605,19 +605,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total[$__range])), 1) * 1000",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [$__range])) / (sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))) * 1000",
           "legendFormat": "1K Tokens",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_cost_usage_USD_total[24h])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total[24h])), 1) * 1000)[7d:24h])",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [7d])) / (sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [7d]))) * 1000",
           "legendFormat": "7 Day Average",
           "refId": "B"
         }
@@ -635,8 +635,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -677,11 +677,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sort_desc(sum by(effort)(increase(claude_code_cost_usage_USD_total{effort!=\"\"}[$__range])))",
-          "legendFormat": "{{effort}}",
+          "expr": "sum by (attributes_effort)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_effort!=\"\" | unwrap attributes_cost_usd [$__range]))",
+          "legendFormat": "{{attributes_effort}}",
           "instant": true,
           "refId": "A"
         }
@@ -699,8 +699,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -740,19 +740,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*sonnet.*\"}[$__range])) * 0.0000027 + sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*haiku.*\"}[$__range])) * 0.00000072",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*sonnet.*\" | unwrap attributes_cache_read_tokens [$__range])) * 0.0000027 + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*haiku.*\" | unwrap attributes_cache_read_tokens [$__range])) * 0.00000072",
           "legendFormat": "Savings Today",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*sonnet.*\"}[24h])) * 0.0000027 + sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\",model=~\".*haiku.*\"}[24h])) * 0.00000072)[7d:24h])",
+          "expr": "(sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*sonnet.*\" | unwrap attributes_cache_read_tokens [7d])) * 0.0000027 + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*haiku.*\" | unwrap attributes_cache_read_tokens [7d])) * 0.00000072) / 7",
           "legendFormat": "7 Day Avg",
           "refId": "B"
         }
@@ -770,8 +770,8 @@
         "h": 6
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "tooltip": {
@@ -829,10 +829,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[1h]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [$__auto]))",
           "legendFormat": "Cost/hr",
           "refId": "A"
         }
@@ -984,8 +984,8 @@
         "h": 5
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -1026,10 +1026,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\"}[$__range]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))",
           "legendFormat": "Effective Tokens (24h)",
           "refId": "A"
         }
@@ -1047,8 +1047,8 @@
         "h": 5
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -1089,10 +1089,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\",model=~\".*sonnet.*\"}[$__range]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*sonnet.*\" | unwrap attributes_input_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*sonnet.*\" | unwrap attributes_output_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_model=~\".*sonnet.*\" | unwrap attributes_cache_creation_tokens [$__range]))",
           "legendFormat": "Sonnet Effective Tokens (24h)",
           "refId": "A"
         }
@@ -1110,8 +1110,8 @@
         "h": 5
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -1150,19 +1150,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total[$__range]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))",
           "legendFormat": "Total Tokens Today",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_token_usage_tokens_total[24h])))[7d:24h])",
+          "expr": "(sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [7d]))) / 7",
           "legendFormat": "7 Day Avg",
           "instant": true,
           "refId": "B"
@@ -1181,8 +1181,8 @@
         "h": 5
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -1221,10 +1221,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total[7d]))",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [7d])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [7d]))",
           "legendFormat": "Weekly Token Usage",
           "refId": "A"
         }
@@ -1242,8 +1242,8 @@
         "h": 8
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "tooltip": {
@@ -1303,10 +1303,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(rate(claude_code_token_usage_tokens_total[$__rate_interval]) * 60)",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__auto])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__auto])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__auto])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__auto]))",
           "legendFormat": "Total Token Rate",
           "refId": "A"
         }
@@ -1324,8 +1324,8 @@
         "h": 8
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "tooltip": {
@@ -1380,11 +1380,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum by(query_source)(increase(claude_code_token_usage_tokens_total{type!=\"cacheRead\"}[$__rate_interval]))",
-          "legendFormat": "{{query_source}}",
+          "expr": "sum by (attributes_query_source)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__auto])) + sum by (attributes_query_source)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__auto])) + sum by (attributes_query_source)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__auto]))",
+          "legendFormat": "{{attributes_query_source}}",
           "refId": "A"
         }
       ]
@@ -1401,8 +1401,8 @@
         "h": 8
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "pieType": "pie",
@@ -1438,11 +1438,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total[$__range]))",
-          "legendFormat": "{{model}}",
+          "expr": "sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__range])) + sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) + sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))",
+          "legendFormat": "{{attributes_model}}",
           "instant": true,
           "refId": "A"
         }
@@ -1460,8 +1460,8 @@
         "h": 8
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -1509,10 +1509,10 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{type=\"cacheRead\"}[$__range])) / clamp_min(sum(increase(claude_code_token_usage_tokens_total{type=~\"input|cacheRead|cacheCreation\"}[$__range])), 1) * 100",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) / (sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))) * 100",
           "legendFormat": "Cache Hit %",
           "refId": "A"
         }
@@ -1535,7 +1535,7 @@
       "id": 5,
       "type": "stat",
       "title": "Code Edit Acceptance Rate %",
-      "description": "Percentage of Claude's proposed file edits that were accepted over the selected time range, plus the 7-day average. Below 80% suggests edits are frequently being rejected or need rework.",
+      "description": "Percentage of Claude's proposed file edits that were accepted over the selected time range, plus the 7-day average. Below 80% suggests edits are frequently being rejected or need rework. ⚠️ Source: Prometheus counter (increase()) — a sampled approximation that reads slightly LOW vs exact event totals; this metric has no per-event log field to sum precisely.",
       "gridPos": {
         "x": 0,
         "y": 46,
@@ -1615,7 +1615,7 @@
       "id": 9,
       "type": "stat",
       "title": "Active Time",
-      "description": "CLI time is how long Claude Code was running and processing. User time is how long you were actively engaged. A high CLI-to-user ratio means Claude is doing a lot of autonomous work.",
+      "description": "CLI time is how long Claude Code was running and processing. User time is how long you were actively engaged. A high CLI-to-user ratio means Claude is doing a lot of autonomous work. ⚠️ Source: Prometheus counter (increase()) — a sampled approximation that reads slightly LOW vs exact event totals; this metric has no per-event log field to sum precisely.",
       "gridPos": {
         "x": 6,
         "y": 46,
@@ -1727,8 +1727,8 @@
         "h": 4
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -1768,19 +1768,19 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_session_count_total[$__range]))",
+          "expr": "count(sum by (attributes_session_id)(count_over_time({job=\"claude-code\"} |= \"api_request\" | json [$__range])))",
           "legendFormat": "Active Sessions",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "avg_over_time((sum(increase(claude_code_session_count_total[24h])))[7d:24h])",
+          "expr": "count(sum by (attributes_session_id)(count_over_time({job=\"claude-code\"} |= \"api_request\" | json [7d]))) / 7",
           "legendFormat": "7 Day Avg",
           "refId": "B"
         }
@@ -1790,7 +1790,7 @@
       "id": 13,
       "type": "bargauge",
       "title": "Lines of Code Modified",
-      "description": "Lines added and removed over the selected time range alongside rolling 7-day daily averages. A large gap between Today and 7 Day Avg indicates an unusually active or quiet day.",
+      "description": "Lines added and removed over the selected time range alongside rolling 7-day daily averages. A large gap between Today and 7 Day Avg indicates an unusually active or quiet day. ⚠️ Source: Prometheus counter (increase()) — a sampled approximation that reads slightly LOW vs exact event totals; this metric has no per-event log field to sum precisely.",
       "gridPos": {
         "x": 18,
         "y": 46,
@@ -1883,7 +1883,7 @@
       "id": 12,
       "type": "bargauge",
       "title": "Average Session Metrics",
-      "description": "Per-session averages over the selected time range: cost in dollars, total tokens, and active CLI time. Rising cost or token averages over days indicate sessions are running longer without being compacted.",
+      "description": "Per-session averages over the selected time range: cost in dollars, total tokens, and active CLI time. Rising cost or token averages over days indicate sessions are running longer without being compacted. ⚠️ Avg cost & tokens are exact (log-based); avg duration uses the active_time metric (sampled, reads approximate).",
       "gridPos": {
         "x": 0,
         "y": 50,
@@ -1891,8 +1891,8 @@
         "h": 5
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "datasource",
+        "uid": "-- Mixed --"
       },
       "options": {
         "reduceOptions": {
@@ -2012,20 +2012,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
+          "expr": "sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [$__range])) / count(sum by (attributes_session_id)(count_over_time({job=\"claude-code\"} |= \"api_request\" | json [$__range])))",
           "legendFormat": "Avg Cost",
           "instant": true,
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total[$__range])) / clamp_min(sum(increase(claude_code_session_count_total[$__range])), 1)",
+          "expr": "(sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) + sum(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))) / count(sum by (attributes_session_id)(count_over_time({job=\"claude-code\"} |= \"api_request\" | json [$__range])))",
           "legendFormat": "Avg Tokens",
           "instant": true,
           "refId": "B"
@@ -2154,7 +2154,7 @@
       "id": 32,
       "type": "stat",
       "title": "Commits",
-      "description": "Git commits made via Claude Code over the selected time range versus the 7-day daily average. Pairs with the lines-of-code panels to show shipped output, not just edit volume.",
+      "description": "Git commits made via Claude Code over the selected time range versus the 7-day daily average. Pairs with the lines-of-code panels to show shipped output, not just edit volume. ⚠️ Source: Prometheus counter (increase()) — a sampled approximation that reads slightly LOW vs exact event totals; this metric has no per-event log field to sum precisely.",
       "gridPos": {
         "x": 0,
         "y": 55,
@@ -2234,8 +2234,8 @@
         "h": 5
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -2275,11 +2275,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sum by (model) (increase(claude_code_token_usage_tokens_total[$__range])) / clamp_min(sum by (model) (increase(claude_code_cost_usage_USD_total[$__range])), 0.0001)",
-          "legendFormat": "{{model}}",
+          "expr": "(sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_input_tokens [$__range])) + sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_output_tokens [$__range])) + sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_read_tokens [$__range])) + sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cache_creation_tokens [$__range]))) / sum by (attributes_model)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | unwrap attributes_cost_usd [$__range]))",
+          "legendFormat": "{{attributes_model}}",
           "instant": true,
           "refId": "A"
         }
@@ -2418,7 +2418,7 @@
       "id": 30,
       "type": "piechart",
       "title": "MCP Server Token Attribution",
-      "description": "Token consumption attributed to MCP server calls over the selected time range. Only turns that invoked an MCP tool carry the mcp_server_name label. Shows which MCP integrations (e.g. linear) are driving context size and cost.",
+      "description": "Token consumption attributed to MCP server calls over the selected time range. Only turns that invoked an MCP tool carry the mcp_server_name label. Shows which MCP integrations (e.g. linear) are driving context size and cost. ⚠️ Source: Prometheus counter (increase()) — a sampled approximation that reads slightly LOW vs exact event totals; this metric has no per-event log field to sum precisely.",
       "gridPos": {
         "x": 16,
         "y": 61,
@@ -2485,8 +2485,8 @@
         "h": 6
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -2527,11 +2527,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sort_desc(sum by(skill_name)(increase(claude_code_cost_usage_USD_total{skill_name!=\"\"}[$__range])))",
-          "legendFormat": "{{skill_name}}",
+          "expr": "sum by (attributes_skill_name)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_skill_name!=\"\" | unwrap attributes_cost_usd [$__range]))",
+          "legendFormat": "{{attributes_skill_name}}",
           "instant": true,
           "refId": "A"
         }
@@ -2549,8 +2549,8 @@
         "h": 6
       },
       "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
+        "type": "loki",
+        "uid": "${loki_datasource}"
       },
       "options": {
         "reduceOptions": {
@@ -2591,11 +2591,11 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+            "type": "loki",
+            "uid": "${loki_datasource}"
           },
-          "expr": "sort_desc(sum by(skill_name)(increase(claude_code_token_usage_tokens_total{skill_name!=\"\",type!=\"cacheRead\"}[$__range])))",
-          "legendFormat": "{{skill_name}}",
+          "expr": "sum by (attributes_skill_name)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_skill_name!=\"\" | unwrap attributes_input_tokens [$__range])) + sum by (attributes_skill_name)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_skill_name!=\"\" | unwrap attributes_output_tokens [$__range])) + sum by (attributes_skill_name)(sum_over_time({job=\"claude-code\"} |= \"api_request\" | json | attributes_skill_name!=\"\" | unwrap attributes_cache_creation_tokens [$__range]))",
+          "legendFormat": "{{attributes_skill_name}}",
           "instant": true,
           "refId": "A"
         }

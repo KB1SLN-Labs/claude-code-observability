@@ -30,16 +30,22 @@ prometheus:
 ## Loki
 loki:
   image: grafana/loki:3.0.0
+  # Optional node pinning. Empty = schedule anywhere. Useful to keep Loki off an
+  # overcommitted node (an OOMKill SIGKILLs Loki mid-write and corrupts the
+  # single-replica TSDB index). Set in a local values override, e.g.
+  # loki.nodeSelector: { kubernetes.io/hostname: <node> }.
+  nodeSelector: {}
   persistence:
     size: 10Gi
     storageClass: ""
   resources:
     requests:
       cpu: 50m
-      memory: 128Mi
+      memory: 256Mi
     limits:
       cpu: 500m
-      memory: 512Mi
+      # 512Mi OOMKilled Loki under WAL replay / compaction; 1Gi gives headroom.
+      memory: 1Gi
 
 ## Tempo (traces backend)
 ## The trace store, peer of Prometheus (metrics) and Loki (logs). Both Claude

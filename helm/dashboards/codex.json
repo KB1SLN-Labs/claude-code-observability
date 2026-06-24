@@ -2154,7 +2154,7 @@
     {
       "id": 81,
       "type": "stat",
-      "title": "Avg API Latency (ms)",
+      "title": "p95 API Latency (TTFT)",
       "description": "Average API request round-trip (codex.api_request duration_ms, real model requests) over the selected range. Green < 30s, yellow < 90s, red above.",
       "gridPos": {
         "x": 6,
@@ -2217,15 +2217,15 @@
           },
           "refId": "A",
           "instant": true,
-          "expr": "avg_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | __error__=\"\" | unwrap attributes_duration_ms [$__range])",
-          "legendFormat": "Avg API Latency (ms)"
+          "expr": "max(quantile_over_time(0.95, {service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.turn_ttft\" | __error__=\"\" | unwrap attributes_duration_ms [$__range]))",
+          "legendFormat": "p95 API Latency"
         }
       ]
     },
     {
       "id": 82,
       "type": "bargauge",
-      "title": "p95 API Latency by Model (ms)",
+      "title": "p95 API Latency by Model (TTFT)",
       "description": "95th percentile API request round-trip duration by model (codex.api_request). This is the full HTTP round-trip to OpenAI's Responses endpoint, complementary to the WebSocket transport latency above.",
       "gridPos": {
         "x": 12,
@@ -2290,14 +2290,14 @@
           "refId": "A",
           "instant": true,
           "legendFormat": "{{attributes_model}}",
-          "expr": "quantile_over_time(0.95, {service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | __error__=\"\" | unwrap attributes_duration_ms [$__range]) by (attributes_model)"
+          "expr": "quantile_over_time(0.95, {service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.turn_ttft\" | __error__=\"\" | unwrap attributes_duration_ms [$__range]) by (attributes_model)"
         }
       ]
     },
     {
       "id": 83,
       "type": "timeseries",
-      "title": "API Latency Over Time — by Model",
+      "title": "p95 API Latency Over Time — by Model (TTFT)",
       "description": "Average API request round-trip per hour by model (codex.api_request). Rising latency can indicate larger context or server-side slowdowns.",
       "gridPos": {
         "x": 0,
@@ -2353,7 +2353,7 @@
           },
           "refId": "A",
           "legendFormat": "{{attributes_model}}",
-          "expr": "avg_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | __error__=\"\" | unwrap attributes_duration_ms [$__auto]) by (attributes_model)"
+          "expr": "quantile_over_time(0.95, {service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.turn_ttft\" | __error__=\"\" | unwrap attributes_duration_ms [$__auto]) by (attributes_model)"
         }
       ]
     },
@@ -2528,8 +2528,8 @@
           },
           "refId": "A",
           "instant": true,
-          "expr": "sum(count_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.api_request\" | attributes_model!=\"\" [$__range]))",
-          "legendFormat": "API Requests (Responses)"
+          "expr": "sum(count_over_time({service_name=~\"codex-app-server|codex_exec\"} | json | attributes_event_name=\"codex.websocket_request\" [$__range]))",
+          "legendFormat": "API Requests"
         }
       ]
     },
